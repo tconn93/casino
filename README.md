@@ -80,4 +80,3 @@ npm run dev
 
 MIT License - See LICENSE file for details
 
-Testing mergeup alias.
