@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
+import Lobby from './pages/Lobby';
 import PokerGame from './pages/PokerGame';
 import BlackjackGame from './pages/BlackjackGame';
 import RouletteGame from './pages/RouletteGame';
@@ -38,6 +39,7 @@ function App() {
           <Route path="/login" element={<PublicRoute><Login /></PublicRoute>} />
           <Route path="/register" element={<PublicRoute><Register /></PublicRoute>} />
           <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+          <Route path="/lobby/:gameType" element={<PrivateRoute><Lobby /></PrivateRoute>} />
           <Route path="/poker/:tableId" element={<PrivateRoute><PokerGame /></PrivateRoute>} />
           <Route path="/blackjack/:tableId" element={<PrivateRoute><BlackjackGame /></PrivateRoute>} />
           <Route path="/roulette/:tableId" element={<PrivateRoute><RouletteGame /></PrivateRoute>} />

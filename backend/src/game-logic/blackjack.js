@@ -3,8 +3,7 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 
 class BlackjackGame {
-  constructor(table, mode) {
-    this.table = table;
+  constructor(mode) {
     this.mode = mode;
     this.deck = shuffleDeck(createDeck());
     this.dealerHand = [];
@@ -13,9 +12,9 @@ class BlackjackGame {
     this.playerStanding = new Set();
   }
 
-  dealInitialCards() {
+  dealInitialCards(players) {
     // Deal to players
-    for (const player of this.table.players) {
+    for (const player of players) {
       const hand = [this.deck.pop(), this.deck.pop()];
       this.playerHands.set(player.socketId, hand);
     }
@@ -51,7 +50,7 @@ async function handleAction(table, socket, data) {
 
       // Initialize game if first bet
       if (!table.gameState) {
-        table.gameState = new BlackjackGame(table, table.mode);
+        table.gameState = new BlackjackGame(table.mode);
       }
 
       await Wallet.debit(socket.userId, bet, 'blackjack', 'Blackjack bet');
@@ -64,7 +63,7 @@ async function handleAction(table, socket, data) {
 
       // Check if all players have bet (or if vs_house mode with single player)
       if (table.mode === 'vs_house' || table.gameState.playerBets.size === table.players.length) {
-        table.gameState.dealInitialCards();
+        table.gameState.dealInitialCards(table.players);
 
         return {
           type: 'gameStarted',

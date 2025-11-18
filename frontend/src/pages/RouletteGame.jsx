@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socket from '../services/socket';
 import api from '../services/api';
@@ -9,6 +9,7 @@ import './RouletteGame.css';
 
 function RouletteGame() {
   const { tableId } = useParams();
+  const location = useLocation();
   const { user, updateBalance } = useAuth();
   const [bets, setBets] = useState([]);
   const [betAmount, setBetAmount] = useState(10);
@@ -17,7 +18,10 @@ function RouletteGame() {
   const [spinning, setSpinning] = useState(false);
 
   useEffect(() => {
-    socket.joinTable('roulette', tableId, 'vs_house');
+    const searchParams = new URLSearchParams(location.search);
+    const seatNumber = searchParams.get('seat') ? parseInt(searchParams.get('seat')) : null;
+
+    socket.joinTable('roulette', tableId, 'multiplayer', seatNumber);
 
     socket.on('gameUpdate', handleGameUpdate);
     socket.on('error', handleError);
@@ -27,7 +31,7 @@ function RouletteGame() {
       socket.off('error', handleError);
       socket.leaveTable();
     };
-  }, [tableId]);
+  }, [tableId, location.search]);
 
   const handleGameUpdate = async (data) => {
     console.log('Game update:', data);

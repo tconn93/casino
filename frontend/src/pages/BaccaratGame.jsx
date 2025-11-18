@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socket from '../services/socket';
 import api from '../services/api';
@@ -10,6 +10,7 @@ import './BaccaratGame.css';
 
 function BaccaratGame() {
   const { tableId } = useParams();
+  const location = useLocation();
   const { user, updateBalance } = useAuth();
   const [chipValue, setChipValue] = useState(10);
   const [activeBets, setActiveBets] = useState({player: 0, banker: 0, tie: 0});
@@ -21,7 +22,10 @@ function BaccaratGame() {
   const [message, setMessage] = useState('Place your bets: Player, Banker, or Tie');
 
   useEffect(() => {
-    socket.joinTable('baccarat', tableId, 'vs_house');
+    const searchParams = new URLSearchParams(location.search);
+    const seatNumber = searchParams.get('seat') ? parseInt(searchParams.get('seat')) : null;
+
+    socket.joinTable('baccarat', tableId, 'multiplayer', seatNumber);
 
     socket.on('gameUpdate', handleGameUpdate);
     socket.on('error', handleError);
@@ -31,7 +35,7 @@ function BaccaratGame() {
       socket.off('error', handleError);
       socket.leaveTable();
     };
-  }, [tableId]);
+  }, [tableId, location.search]);
 
 const handleGameUpdate = async (data) => {
   console.log('Game update:', data);

@@ -2,8 +2,7 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 
 class CrapsGame {
-  constructor(table) {
-    this.table = table;
+  constructor() {
     this.phase = 'comeOut'; // comeOut or point
     this.point = null;
     this.bets = new Map(); // socketId -> array of bets
@@ -27,20 +26,25 @@ class CrapsGame {
     evaluateBets(roll) {
       const results = new Map();
       const betMovements = []; // Track Come/Don't Come bets that moved to numbers
+      const betsToRemove = new Map(); // Track which bets to remove from each player
+      const betOutcomes = new Map(); // Track wins/losses for each player
 
       for (const [socketId, playerBets] of this.bets.entries()) {
               let winnings = 0;
+              const removeIndices = []; // Indices of bets to remove for this player
+              const outcomes = { won: [], lost: [] };
 
               // Filter out bets that need special handling
               const regularBets = [];
               const newComeBets = [];
               const newDontComeBets = [];
 
-              for (const bet of playerBets) {
+              for (let i = 0; i < playerBets.length; i++) {
+                const bet = playerBets[i];
                 if (bet.type === 'come') {
-                  newComeBets.push(bet);
+                  newComeBets.push({ bet, index: i });
                 } else if (bet.type === 'dontCome') {
-                  newDontComeBets.push(bet);
+                  newDontComeBets.push({ bet, index: i });
                 } else {
                   regularBets.push(bet);
                 }
@@ -49,36 +53,68 @@ class CrapsGame {
               // Evaluate regular bets
               for (const bet of regularBets) {
                 const result = this.evaluateBet(bet, roll);
-                if (result.win) {
+                if (result.win === true) {
                   winnings += bet.amount * result.payout;
+                  outcomes.won.push({ type: bet.type, amount: bet.amount });
+                } else if (result.win === false) {
+                  outcomes.lost.push({ type: bet.type, amount: bet.amount });
                 }
               }
 
-          // Handle new Come bets
-          for (const bet of newComeBets) {
-            const result = this.evaluateComeBet(bet, roll, socketId, betMovements);
-            if (result.win !== null) {
-              if (result.win) {
-                winnings += bet.amount * result.payout; // Add full payout
-              } // For loss, nothing - stake lost
-            } // For move, null, bet stays in comeBets
-          }
+      //     // Handle new Come bets
+      //     for (const { bet, index } of newComeBets) {
+      //       const result = this.evaluateComeBet(bet, roll, socketId, betMovements);
+      //       if (result.win !== null) {
+      //         // Bet resolved (win or loss) - mark for removal
+      //         removeIndices.push(index);
+      //         if (result.win) {
+      //           winnings += bet.amount * result.payout;
+      //           outcomes.won.push({ type: 'come', amount: bet.amount });
+      //         } else {
+      //           outcomes.lost.push({ type: 'come', amount: bet.amount });
+      //         }
+      //       } else {
+      //         // Bet moved to a number - mark for removal from regular bets
+      //         removeIndices.push(index);
+      //       }
+      //     }
 
-          // Handle new Don't Come bets
-          for (const bet of newDontComeBets) {
-            const result = this.evaluateDontComeBet(bet, roll, socketId, betMovements);
-            if (result.win !== null) {
-              if (result.win) {
-                winnings += bet.amount * result.payout; // Add full payout
-              } // For loss or push, handle accordingly
-              if (result.win === null && total === 12) {
-                winnings += bet.amount; // Push - return stake
-              }
-            }
-          }
+      //     // Handle new Don't Come bets
+      //     for (const { bet, index } of newDontComeBets) {
+      //       const result = this.evaluateDontComeBet(bet, roll, socketId, betMovements);
+      //       if (result.win !== null) {
+      //         // Bet resolved - mark for removal
+      //         removeIndices.push(index);
+      //         if (result.win) {
+      //           winnings += bet.amount * result.payout;
+      //           outcomes.won.push({ type: 'dontCome', amount: bet.amount });
+      //         } else {
+      //           outcomes.lost.push({ type: 'dontCome', amount: bet.amount });
+      //         }
+      //         if (result.win === null && roll.total === 12) {
+      //           winnings += bet.amount; // Push - return stake
+      //         }
+      //       } else {
+      //         // Bet moved to a number - mark for removal
+      //         removeIndices.push(index);
+      //       }
+      //     }
 
-              results.set(socketId, winnings);
-      }
+      //     betsToRemove.set(socketId, removeIndices);
+      //     results.set(socketId, winnings);
+      //     betOutcomes.set(socketId, outcomes);
+      // }
+
+      // // Remove come/dontCome bets that were moved or resolved
+      // for (const [socketId, indices] of betsToRemove.entries()) {
+      //   if (indices.length > 0) {
+      //     const playerBets = this.bets.get(socketId);
+      //     // Remove in reverse order to maintain indices
+      //     for (let i = indices.length - 1; i >= 0; i--) {
+      //       playerBets.splice(indices[i], 1);
+      //     }
+      //   }
+      // }
 
     // Evaluate existing Come bets that have numbers
     const remainingComeBets = [];
@@ -87,8 +123,15 @@ class CrapsGame {
         // Win! Add profit (stake + win = amount * 2, but since stake debited, credit full)
         const currentWinnings = results.get(comeBet.socketId) || 0;
         results.set(comeBet.socketId, currentWinnings + comeBet.amount * 2);
+
+        const outcomes = betOutcomes.get(comeBet.socketId) || { won: [], lost: [] };
+        outcomes.won.push({ type: `come-${comeBet.number}`, amount: comeBet.amount });
+        betOutcomes.set(comeBet.socketId, outcomes);
       } else if (roll.total === 7) {
         // Lose - no credit
+        const outcomes = betOutcomes.get(comeBet.socketId) || { won: [], lost: [] };
+        outcomes.lost.push({ type: `come-${comeBet.number}`, amount: comeBet.amount });
+        betOutcomes.set(comeBet.socketId, outcomes);
       } else {
         remainingComeBets.push(comeBet);
       }
@@ -102,15 +145,77 @@ class CrapsGame {
         // Win! Add full payout
         const currentWinnings = results.get(dontComeBet.socketId) || 0;
         results.set(dontComeBet.socketId, currentWinnings + dontComeBet.amount * 2);
+
+        const outcomes = betOutcomes.get(dontComeBet.socketId) || { won: [], lost: [] };
+        outcomes.won.push({ type: `dontcome-${dontComeBet.number}`, amount: dontComeBet.amount });
+        betOutcomes.set(dontComeBet.socketId, outcomes);
       } else if (roll.total === dontComeBet.number) {
         // Lose - no credit
+        const outcomes = betOutcomes.get(dontComeBet.socketId) || { won: [], lost: [] };
+        outcomes.lost.push({ type: `dontcome-${dontComeBet.number}`, amount: dontComeBet.amount });
+        betOutcomes.set(dontComeBet.socketId, outcomes);
       } else {
         remainingDontComeBets.push(dontComeBet);
       }
     }
     this.dontComeBets = remainingDontComeBets;
 
-      return { results, betMovements };
+          // Remove come/dontCome bets that were moved or resolved
+      for (const [socketId, indices] of betsToRemove.entries()) {
+        if (indices.length > 0) {
+          const playerBets = this.bets.get(socketId);
+          // Remove in reverse order to maintain indices
+          for (let i = indices.length - 1; i >= 0; i--) {
+            playerBets.splice(indices[i], 1);
+          }
+        }
+      }
+
+                // Handle new Come bets
+          for (const { bet, index } of newComeBets) {
+            const result = this.evaluateComeBet(bet, roll, socketId, betMovements);
+            if (result.win !== null) {
+              // Bet resolved (win or loss) - mark for removal
+              removeIndices.push(index);
+              if (result.win) {
+                winnings += bet.amount * result.payout;
+                outcomes.won.push({ type: 'come', amount: bet.amount });
+              } else {
+                outcomes.lost.push({ type: 'come', amount: bet.amount });
+              }
+            } else {
+              // Bet moved to a number - mark for removal from regular bets
+              removeIndices.push(index);
+            }
+          }
+
+          // Handle new Don't Come bets
+          for (const { bet, index } of newDontComeBets) {
+            const result = this.evaluateDontComeBet(bet, roll, socketId, betMovements);
+            if (result.win !== null) {
+              // Bet resolved - mark for removal
+              removeIndices.push(index);
+              if (result.win) {
+                winnings += bet.amount * result.payout;
+                outcomes.won.push({ type: 'dontCome', amount: bet.amount });
+              } else {
+                outcomes.lost.push({ type: 'dontCome', amount: bet.amount });
+              }
+              if (result.win === null && roll.total === 12) {
+                winnings += bet.amount; // Push - return stake
+              }
+            } else {
+              // Bet moved to a number - mark for removal
+              removeIndices.push(index);
+            }
+          }
+
+          betsToRemove.set(socketId, removeIndices);
+          results.set(socketId, winnings);
+          betOutcomes.set(socketId, outcomes);
+      }
+
+      return { results, betMovements, betOutcomes };
     }
 
     evaluateComeBet(bet, roll, socketId, betMovements) {
@@ -251,7 +356,7 @@ async function handleAction(table, socket, data) {
     }
 
     if (!table.gameState) {
-      table.gameState = new CrapsGame(table);
+      table.gameState = new CrapsGame();
     }
 
 
@@ -278,7 +383,7 @@ async function handleAction(table, socket, data) {
     const { total } = roll;
 
     // Evaluate all bets
-    const { results, betMovements } = game.evaluateBets(roll);
+    const { results, betMovements, betOutcomes } = game.evaluateBets(roll);
 
 // Process winnings and update stats only for resolved bets
   const playerResults = [];
@@ -316,16 +421,28 @@ async function handleAction(table, socket, data) {
     });
   }
 
-    // Update game phase and persist ongoing bets
+    // Remove resolved bets from each player's bet array
+    for (const [socketId, playerBets] of game.bets.entries()) {
+      const unresolvedBets = playerBets.filter(bet => {
+        const result = game.evaluateBet(bet, roll);
+        // Keep bet if it's not resolved (win: null means bet continues)
+        return result.win === null;
+      });
+
+      if (unresolvedBets.length > 0) {
+        game.bets.set(socketId, unresolvedBets);
+      } else {
+        game.bets.delete(socketId);
+      }
+    }
+
+    // Update game phase
     const wasPointPhase = game.phase === 'point';
     if (game.phase === 'comeOut') {
       if (![2, 3, 7, 11, 12].includes(total)) {
         game.point = total;
         game.phase = 'point';
-        // Pass/don't pass bets stay in bets Map
-      } else {
-        // Resolution in comeOut - clear bets
-        game.bets.clear();
+        // Pass/don't pass bets stay in bets Map (already handled above)
       }
     } else {
       if (total === 7) {
@@ -336,22 +453,21 @@ async function handleAction(table, socket, data) {
         game.comeBets = [];
         game.dontComeBets = [];
       } else if (total === game.point) {
-        // Point made - new come-out, clear resolved bets but keep ongoing like place/come
+        // Point made - new come-out
         game.phase = 'comeOut';
         game.point = null;
-        // Remove resolved pass/don't pass from bets, but keep place/hardway/come (come already handled)
-        for (const [socketId, playerBets] of game.bets.entries()) {
-          game.bets.set(socketId, playerBets.filter(bet => !['pass', 'dontPass'].includes(bet.type)));
-        }
-        // comeBets and dontComeBets persist
-      } else {
-        // Non-resolution roll in point phase - bets stay
+        // Resolved bets already removed above
       }
     }
 
-    // If phase changed to comeOut and not seven out, persist place bets etc.
-    if (game.phase === 'comeOut' && wasPointPhase && total !== 7) {
-      // Place bets, hardways stay active
+    // Prepare current active bets for each player
+    const currentBets = new Map();
+    for (const [socketId, playerBets] of game.bets.entries()) {
+      const betsByType = {};
+      for (const bet of playerBets) {
+        betsByType[bet.type] = (betsByType[bet.type] || 0) + bet.amount;
+      }
+      currentBets.set(socketId, betsByType);
     }
 
     return {
@@ -366,7 +482,9 @@ async function handleAction(table, socket, data) {
       playerResults,
       betMovements,
       comeBets: game.comeBets,
-      dontComeBets: game.dontComeBets
+      dontComeBets: game.dontComeBets,
+      currentBets: Array.from(currentBets.entries()).map(([socketId, bets]) => ({ socketId, bets })),
+      betOutcomes: betOutcomes ? Array.from(betOutcomes.entries()).map(([socketId, outcomes]) => ({ socketId, outcomes })) : []
     };
   }
 

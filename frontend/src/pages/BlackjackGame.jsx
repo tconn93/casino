@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socket from '../services/socket';
 import api from '../services/api';
@@ -10,6 +10,7 @@ import './BlackjackGame.css';
 
 function BlackjackGame() {
   const { tableId } = useParams();
+  const location = useLocation();
   const { user, updateBalance } = useAuth();
   const [gameState, setGameState] = useState(null);
   const [totalBet, setTotalBet] = useState(0);
@@ -22,7 +23,10 @@ function BlackjackGame() {
   const [dealerValue, setDealerValue] = useState(0);
 
   useEffect(() => {
-    socket.joinTable('blackjack', tableId, 'vs_house');
+    const searchParams = new URLSearchParams(location.search);
+    const seatNumber = searchParams.get('seat') ? parseInt(searchParams.get('seat')) : null;
+
+    socket.joinTable('blackjack', tableId, 'multiplayer', seatNumber);
 
     socket.on('gameUpdate', handleGameUpdate);
     socket.on('error', handleError);
@@ -32,7 +36,7 @@ function BlackjackGame() {
       socket.off('error', handleError);
       socket.leaveTable();
     };
-  }, [tableId]);
+  }, [tableId, location.search]);
 
   const handleGameUpdate = async (data) => {
     console.log('Game update:', data);

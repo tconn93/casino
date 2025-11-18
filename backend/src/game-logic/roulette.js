@@ -18,8 +18,7 @@ const ROULETTE_NUMBERS = [
 ];
 
 class RouletteGame {
-  constructor(table) {
-    this.table = table;
+  constructor() {
     this.bets = new Map(); // socketId -> array of bets
     this.spinResult = null;
   }
@@ -99,7 +98,7 @@ async function handleAction(table, socket, data) {
     }
 
     if (!table.gameState) {
-      table.gameState = new RouletteGame(table);
+      table.gameState = new RouletteGame();
     }
 
     Wallet.debit(socket.userId, amount, 'roulette', `Roulette bet on ${betType}`);

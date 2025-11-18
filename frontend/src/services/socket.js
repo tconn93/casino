@@ -38,8 +38,16 @@ class SocketService {
     }
   }
 
-  joinTable(gameType, tableId, mode) {
-    this.socket.emit('joinTable', { gameType, tableId, mode });
+  getLobby(gameType) {
+    this.socket.emit('getLobby', { gameType });
+  }
+
+  createTable(gameType, tableName) {
+    this.socket.emit('createTable', { gameType, tableName });
+  }
+
+  joinTable(gameType, tableId, mode = 'multiplayer', seatNumber = null) {
+    this.socket.emit('joinTable', { gameType, tableId, mode, seatNumber });
   }
 
   leaveTable() {
@@ -56,6 +64,10 @@ class SocketService {
 
   off(event, callback) {
     this.socket.off(event, callback);
+  }
+
+  get id() {
+    return this.socket?.id;
   }
 }
 

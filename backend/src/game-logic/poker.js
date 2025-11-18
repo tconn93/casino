@@ -3,8 +3,7 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 
 class PokerGame {
-  constructor(table) {
-    this.table = table;
+  constructor() {
     this.deck = shuffleDeck(createDeck());
     this.communityCards = [];
     this.pot = 0;
@@ -17,8 +16,8 @@ class PokerGame {
     this.dealerIndex = 0;
   }
 
-  dealHands() {
-    for (const player of this.table.players) {
+  dealHands(players) {
+    for (const player of players) {
       const hand = [this.deck.pop(), this.deck.pop()];
       this.playerHands.set(player.socketId, hand);
       this.playerBets.set(player.socketId, 0);
@@ -102,8 +101,8 @@ async function handleAction(table, socket, data) {
         throw new Error('Need at least 2 players to start');
       }
 
-      table.gameState = new PokerGame(table);
-      table.gameState.dealHands();
+      table.gameState = new PokerGame();
+      table.gameState.dealHands(table.players);
 
       return {
         type: 'gameStarted',

@@ -43,8 +43,7 @@ function Dashboard() {
   };
 
   const handleJoinGame = (gameId) => {
-    const tableId = `${gameId}-${Date.now()}`;
-    navigate(`/${gameId}/${tableId}`);
+    navigate(`/lobby/${gameId}`);
   };
 
   return (

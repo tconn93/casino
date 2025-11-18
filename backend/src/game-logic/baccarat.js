@@ -3,8 +3,7 @@ const Wallet = require('../models/Wallet');
 const User = require('../models/User');
 
 class BaccaratGame {
-  constructor(table) {
-    this.table = table;
+  constructor() {
     this.deck = shuffleDeck(createDeck());
     this.playerHand = [];
     this.bankerHand = [];
@@ -150,7 +149,7 @@ async function handleAction(table, socket, data) {
     }
 
     if (!table.gameState) {
-      table.gameState = new BaccaratGame(table);
+      table.gameState = new BaccaratGame();
     }
 
     Wallet.debit(socket.userId, amount, 'baccarat', `Baccarat bet on ${betType}`);

@@ -215,12 +215,14 @@
   border-radius: 10px;
   padding: 15px;
   color: #9b59b6;
+  overflow: visible;
 }
 
 .place-numbers-horizontal {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 8px;
+  overflow: visible;
 }
 
 .place-bet-box-horiz {
@@ -233,6 +235,7 @@
   transition: all 0.2s;
   position: relative;
   min-height: 90px;
+  overflow: visible;
 }
 
 .place-bet-box-horiz:hover {
@@ -393,13 +396,51 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
   min-width: 35px;
   text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.come-bet-chip {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: radial-gradient(circle at 30% 30%, #51cf66, #2f9e44);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 35px;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.dontcome-bet-chip {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a);
+  color: #fff;
+  padding: 4px 8px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 35px;
+  text-align: center;
+  z-index: 10;
+  pointer-events: none;
 }
 
 /* Hover effects */
-.pass-line-corner:hover, .pass-line-main:hover,
+.pass-line-corner , .pass-line-main ,
 .dont-pass-corner:hover, .dont-pass-main:hover,
-.come-area:hover, .dont-come-area:hover,
-.field-container:hover {
+.come-area , .dont-come-area,
+.field-container {
   transform: scale(1.02);
   box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
 }

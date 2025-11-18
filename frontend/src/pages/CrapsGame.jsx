@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import socket from '../services/socket';
 import api from '../services/api';
@@ -9,6 +9,7 @@ import './CrapsGame.css';
 
 function CrapsGame() {
   const { tableId } = useParams();
+  const location = useLocation();
   const { user, updateBalance } = useAuth();
   const [bets, setBets] = useState([]);
   const [chipValue, setChipValue] = useState(10);
@@ -22,7 +23,10 @@ function CrapsGame() {
   const [dontComeBets, setDontComeBets] = useState([]); // Don't Come bets that have moved to numbers
 
   useEffect(() => {
-    socket.joinTable('craps', tableId, 'vs_house');
+    const searchParams = new URLSearchParams(location.search);
+    const seatNumber = searchParams.get('seat') ? parseInt(searchParams.get('seat')) : null;
+
+    socket.joinTable('craps', tableId, 'multiplayer', seatNumber);
 
     socket.on('gameUpdate', handleGameUpdate);
     socket.on('error', handleError);
@@ -32,7 +36,7 @@ function CrapsGame() {
       socket.off('error', handleError);
       socket.leaveTable();
     };
-  }, [tableId]);
+  }, [tableId, location.search]);
 
   const handleGameUpdate = async (data) => {
     console.log('Game update:', data);
@@ -53,52 +57,68 @@ function CrapsGame() {
 
       const myResult = data.playerResults.find(r => r.username === user.username);
 
-      // Check for bet movements (Come/Don't Come bets moving to numbers)
-      let movementMessage = '';
+      // Update active bets from backend
+      if (data.currentBets) {
+        const myCurrentBets = data.currentBets.find(cb => cb.socketId === socket.id);
+        if (myCurrentBets) {
+          setActiveBets(myCurrentBets.bets);
+        } else {
+          // No active bets for this player
+          setActiveBets({});
+        }
+      }
+
+      // Build color-coded message
+      const messageParts = [];
+
+      // Always show the roll in yellow
+      messageParts.push({ text: `You rolled ${data.roll.total}`, color: '#ffd700' });
+
+      // Check for bet movements FIRST (Come/Don't Come bets moving to numbers)
+      // These should show in yellow and NOT be treated as wins
       if (data.betMovements && data.betMovements.length > 0) {
         const myMovements = data.betMovements.filter(m => m.socketId === socket.id);
         if (myMovements.length > 0) {
           myMovements.forEach(movement => {
-            if (movement.type === 'come') {
-              movementMessage += ` Your $${movement.amount} Come bet moved to ${movement.number}.`;
-              // Update local bets to reflect moved status
-              setBets(prevBets => {
-                const newBets = [...prevBets];
-                const comeIndex = newBets.findLastIndex(b => b.betType === 'come' && !b.moved);
-                if (comeIndex !== -1) {
-                  newBets[comeIndex].label = `Come on ${movement.number}`;
-                  newBets[comeIndex].moved = true;
-                  newBets[comeIndex].number = movement.number;
-                }
-                return newBets;
-              });
-            } else if (movement.type === 'dontCome') {
-              movementMessage += ` Your $${movement.amount} Don't Come bet moved to ${movement.number}.`;
-              // Similar for don't come
-              setBets(prevBets => {
-                const newBets = [...prevBets];
-                const dontComeIndex = newBets.findLastIndex(b => b.betType === 'dontCome' && !b.moved);
-                if (dontComeIndex !== -1) {
-                  newBets[dontComeIndex].label = `Don't Come on ${movement.number}`;
-                  newBets[dontComeIndex].moved = true;
-                  newBets[dontComeIndex].number = movement.number;
-                }
-                return newBets;
-              });
-            }
+            const moveText = movement.type === 'come'
+              ? `Come $${movement.amount} moved to ${movement.number}`
+              : `Don't Come $${movement.amount} moved to ${movement.number}`;
+            messageParts.push({ text: moveText, color: '#ffd700' });
           });
         }
       }
 
-      if (myResult) {
-        if (myResult.netProfit > 0) {
-          setMessage(`You rolled ${data.roll.total}! You win $${myResult.winAmount.toFixed(2)}!${movementMessage}`);
-        } else if (myResult.netProfit < 0) {
-          setMessage(`You rolled ${data.roll.total}! You lose!${movementMessage}`);
-        } else {
-          setMessage(`You rolled ${data.roll.total}!${movementMessage}`);
+      // Get my bet outcomes
+      const myOutcomes = data.betOutcomes?.find(bo => bo.socketId === socket.id)?.outcomes;
+
+      if (myOutcomes) {
+        // Show wins in green
+        if (myOutcomes.won.length > 0) {
+          const wonText = myOutcomes.won.map(bet => {
+            const betName = getBetName(bet.type);
+            return `${betName} $${bet.amount} WON`;
+          }).join(', ');
+          messageParts.push({ text: wonText, color: '#51cf66' });
         }
 
+        // Show losses in red
+        if (myOutcomes.lost.length > 0) {
+          const lostText = myOutcomes.lost.map(bet => {
+            const betName = getBetName(bet.type);
+            return `${betName} $${bet.amount} LOST`;
+          }).join(', ');
+          messageParts.push({ text: lostText, color: '#ff6b6b' });
+        }
+      }
+
+      // Create formatted message
+      const formattedMessage = messageParts.map((part, i) => (
+        <span key={i} style={{ color: part.color }}>{part.text}{i < messageParts.length - 1 ? ' | ' : ''}</span>
+      ));
+
+      setMessage(formattedMessage);
+
+      if (myResult) {
         // Refresh balance from server
         try {
           const balanceData = await api.getBalance();
@@ -106,41 +126,46 @@ function CrapsGame() {
         } catch (error) {
           console.error('Failed to update balance:', error);
         }
-      } else {
-        setMessage(`Rolled ${data.roll.total}${data.point ? ` - Point is ${data.point}` : ''}${movementMessage}`);
       }
-
-        if (data.phase === 'comeOut') {
-          setTimeout(() => {
-            setBets(prev => prev.filter(b => !b.resolved)); // Keep unresolved bets like place, moved come
-            setActiveBets(prev => {
-              // Clear resolved active bets like pass if resolved
-              const updated = { ...prev };
-              if (data.roll.total === 7 || data.roll.total === point) {
-                delete updated.pass;
-                delete updated.dontPass;
-              }
-              return updated;
-            });
-            if (data.roll.total === 7) {
-              setComeBets([]);
-              setDontComeBets([]);
-            }
-            setMessage('New come-out roll! Place your bets.');
-          }, 3000);
-        } else {
-          // In point phase, mark resolved bets
-          setTimeout(() => {
-            setBets(prev => prev.map(b => ({ ...b, resolved: data.roll.total === 7 || (data.roll.total === point && ['pass', 'dontPass'].includes(b.betType)) })));
-            setActiveBets(prev => {
-              const updated = { ...prev };
-              if (updated.come !== undefined) updated.come = 0;
-              if (updated.dontCome !== undefined) updated.dontCome = 0;
-              return updated;
-            });
-          }, 1000);
-        }
     }
+  };
+
+  const getBetName = (betType) => {
+    const betNames = {
+      'pass': 'Pass Line',
+      'dontPass': 'Don\'t Pass',
+      'come': 'Come',
+      'dontCome': 'Don\'t Come',
+      'field': 'Field',
+      'any7': 'Any 7',
+      'anyCraps': 'Any Craps',
+      'craps2': 'Snake Eyes (2)',
+      'craps3': 'Ace Deuce (3)',
+      'yo11': 'Yo (11)',
+      'craps12': 'Boxcars (12)'
+    };
+
+    // Handle place bets
+    if (betType.startsWith('place')) {
+      return `Place ${betType.replace('place', '')}`;
+    }
+
+    // Handle hardways
+    if (betType.startsWith('hard')) {
+      return `Hard ${betType.replace('hard', '')}`;
+    }
+
+    // Handle come bets on numbers
+    if (betType.startsWith('come-')) {
+      return `Come on ${betType.replace('come-', '')}`;
+    }
+
+    // Handle don't come bets on numbers
+    if (betType.startsWith('dontcome-')) {
+      return `Don't Come on ${betType.replace('dontcome-', '')}`;
+    }
+
+    return betNames[betType] || betType;
   };
 
   const handleError = (error) => {
@@ -179,17 +204,10 @@ const placeBet = (betType, betLabel) => {
 
   // Helper to get moved bets for a specific number
   const getMovedBetsForNumber = (number) => {
-    const socketId = socket.socket?.id;
-    console.log('Checking moved bets for number:', number);
-    console.log('My socket ID:', socketId);
-    console.log('All come bets:', comeBets);
-    console.log('All dont come bets:', dontComeBets);
+    const socketId = socket.id;
 
     const myComeBets = comeBets.filter(b => b.number === number && b.socketId === socketId);
     const myDontComeBets = dontComeBets.filter(b => b.number === number && b.socketId === socketId);
-
-    console.log('My come bets for', number, ':', myComeBets);
-    console.log('My dont come bets for', number, ':', myDontComeBets);
 
     return { comeBets: myComeBets, dontComeBets: myDontComeBets };
   };
@@ -228,13 +246,13 @@ const placeBet = (betType, betLabel) => {
           <div className="table-felt">
             {/* Don't Pass Bar (top) */}
             <div className="dont-pass-container">
-              <div
+              {/* <div
                 className={`dont-pass-corner ${activeBets['dontPass'] ? 'active' : ''}`}
                 onClick={() => placeBet('dontPass', "Don't Pass")}
               >
                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>DON'T PASS BAR</div>
                 {activeBets['dontPass'] > 0 && <div className="bet-chip">${activeBets['dontPass']}</div>}
-              </div>
+              </div> */}
               <div
                 className={`dont-pass-main ${activeBets['dontPass'] ? 'active' : ''}`}
                 onClick={() => placeBet('dontPass', "Don't Pass")}
@@ -243,13 +261,13 @@ const placeBet = (betType, betLabel) => {
                 <div style={{ fontSize: '0.85rem', color: '#ddd', marginTop: '5px' }}>Pays 1:1</div>
                 {activeBets['dontPass'] > 0 && <div className="bet-chip">${activeBets['dontPass']}</div>}
               </div>
-              <div
+              {/* <div
                 className={`dont-pass-corner ${activeBets['dontPass'] ? 'active' : ''}`}
                 onClick={() => placeBet('dontPass', "Don't Pass")}
               >
                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#fff' }}>DON'T PASS BAR</div>
                 {activeBets['dontPass'] > 0 && <div className="bet-chip">${activeBets['dontPass']}</div>}
-              </div>
+              </div> */}
             </div>
 
             <div className="craps-layout">
@@ -309,39 +327,19 @@ const placeBet = (betType, betLabel) => {
                       const moved = getMovedBetsForNumber(number);
                       const payouts = { 4: '9:5', 5: '7:5', 6: '7:6', 8: '7:6', 9: '7:5', 10: '9:5' };
                       return (
-                    <div key={number} className={`place-bet-box-horiz ${activeBets[`place${number}`] ? 'active' : ''} ${point === number ? 'is-point' : ''}`} onClick={() => placeBet(`place${number}`, `Place ${number}`)} style={{position: 'relative', overflow: 'visible'}}>
+                    <div key={number} className={`place-bet-box-horiz ${activeBets[`place${number}`] ? 'active' : ''} ${point === number ? 'is-point' : ''}`} onClick={() => placeBet(`place${number}`, `Place ${number}`)}>
                       {point === number && <div className="point-puck">ON</div>}
                       <div className="place-number">{number}</div>
                       <div className="place-payout">{payouts[number]}</div>
                       {activeBets[`place${number}`] > 0 && <div className="bet-chip">${activeBets[`place${number}`]}</div>}
                     {moved.comeBets.map((bet, i) => (
-                      <div key={`come-${number}-${i}`} className="bet-chip" style={{ 
-                        position: 'absolute', 
-                        top: `${10 + i * 25}px`, 
-                        left: '50%',
-                        transform: 'translateX(-50%)',
-                        background: 'radial-gradient(circle at 30% 30%, #51cf66, #2f9e44)', 
-                        fontSize: '0.8em',
-                        padding: '2px 5px',
-                        minWidth: '40px',
-                        textAlign: 'center'
-                      }}>
-                        C ${bet.amount}
+                      <div key={`come-${number}-${i}`} className="bet-chip come-bet-chip">
+                        ${bet.amount}
                       </div>
                     ))}
                     {moved.dontComeBets.map((bet, i) => (
-                      <div key={`dontcome-${number}-${i}`} className="bet-chip" style={{ 
-                        position: 'absolute', 
-                        top: `${10 + i * 25}px`, 
-                        right: '10px', 
-                        left: 'auto', 
-                        background: 'radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)', 
-                        fontSize: '0.8em',
-                        padding: '2px 5px',
-                        minWidth: '40px',
-                        textAlign: 'center'
-                      }}>
-                        DC ${bet.amount}
+                      <div key={`dontcome-${number}-${i}`} className="bet-chip dontcome-bet-chip">
+                        ${bet.amount}
                       </div>
                     ))}
                     </div>
@@ -405,13 +403,14 @@ const placeBet = (betType, betLabel) => {
 
             {/* Pass Line (bottom) */}
             <div className="pass-line-container">
-              <div
+              <div></div>
+              {/* <div
                 className={`pass-line-corner ${activeBets['pass'] ? 'active' : ''}`}
                 onClick={() => placeBet('pass', 'Pass Line')}
               >
                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffd700' }}>PASS LINE</div>
                 {activeBets['pass'] > 0 && <div className="bet-chip">${activeBets['pass']}</div>}
-              </div>
+              </div> */}
               <div
                 className={`pass-line-main ${activeBets['pass'] ? 'active' : ''}`}
                 onClick={() => placeBet('pass', 'Pass Line')}
@@ -420,21 +419,22 @@ const placeBet = (betType, betLabel) => {
                 <div style={{ fontSize: '0.9rem', color: '#fff', marginTop: '5px' }}>Pays 1:1</div>
                 {activeBets['pass'] > 0 && <div className="bet-chip">${activeBets['pass']}</div>}
               </div>
-              <div
+              {/* <div
                 className={`pass-line-corner ${activeBets['pass'] ? 'active' : ''}`}
                 onClick={() => placeBet('pass', 'Pass Line')}
               >
                 <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#ffd700' }}>PASS LINE</div>
                 {activeBets['pass'] > 0 && <div className="bet-chip">${activeBets['pass']}</div>}
-              </div>
+              </div> */}
+              <div></div>
             </div>
 
-            {bets.length > 0 && (
+            {Object.keys(activeBets).length > 0 && (
               <div className="your-bets">
                 <h3>Your Active Bets:</h3>
-                {bets.map((bet, i) => (
-                  <span key={i} className="bet-chip">
-                    {bet.label || bet.betType}: ${bet.amount}
+                {Object.entries(activeBets).map(([betType, amount]) => (
+                  <span key={betType} className="bet-chip">
+                    {getBetName(betType)}: ${amount}
                   </span>
                 ))}
               </div>
@@ -457,16 +457,15 @@ const placeBet = (betType, betLabel) => {
             {rolling ? 'Rolling...' : 'Roll Dice'}
           </button>
 
-          {bets.length > 0 && (
+          {Object.keys(activeBets).length > 0 && (
             <button
               onClick={() => {
                 setBets([]);
-                setActiveBets({});
-                setMessage('Bets cleared. Place new bets.');
+                setMessage('Note: Can only clear bets before rolling. Ongoing bets will continue.');
               }}
               className="btn-action btn-clear"
             >
-              Clear Bets
+              Clear New Bets
             </button>
           )}
         </div>
