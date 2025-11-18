@@ -1,0 +1,630 @@
+.craps-table-container {
+  background: #0a5f0a;
+  border: 15px solid #8b4513;
+  border-radius: 30px;
+  padding: 30px;
+  margin: 20px auto;
+  max-width: 1100px;
+  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
+  position: relative;
+}
+
+.craps-table-container::before {
+  content: '';
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  right: -10px;
+  bottom: -10px;
+  background: linear-gradient(135deg, #654321 0%, #8b4513 50%, #654321 100%);
+  border-radius: 35px;
+  z-index: -1;
+}
+
+.table-felt {
+  background: linear-gradient(135deg, #0a5f0a 0%, #0d7f0d 50%, #0a5f0a 100%);
+  padding: 25px;
+  border-radius: 15px;
+  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
+}
+
+.craps-layout {
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 15px;
+}
+
+/* Side Sections */
+.left-section, .right-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Center Section */
+.center-section {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding: 0 10px;
+}
+
+/* Pass Line - runs along the bottom */
+.pass-line-container {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.pass-line-corner {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.15) 100%);
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.pass-line-main {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.15) 100%);
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+/* Don't Pass Bar */
+.dont-pass-container {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 3fr 1fr;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.dont-pass-corner {
+  background: rgba(0, 0, 0, 0.4);
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  padding: 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.dont-pass-main {
+  background: rgba(0, 0, 0, 0.4);
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+/* Come/Don't Come */
+.come-area {
+  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 25px 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffd700;
+}
+
+.dont-come-area {
+  background: rgba(0, 0, 0, 0.4);
+  border: 3px solid #ddd;
+  border-radius: 10px;
+  padding: 25px 15px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+/* Field */
+.field-container {
+  background: rgba(255, 255, 255, 0.12);
+  border: 3px solid #ffd700;
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.field-label {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: #ffd700;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.field-numbers {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.field-number {
+  background: rgba(255, 255, 255, 0.15);
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 8px;
+  padding: 8px 5px;
+  text-align: center;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: #fff;
+}
+
+.field-number.double {
+  background: rgba(255, 100, 100, 0.25);
+  border-color: #ff6b6b;
+  color: #ffcccc;
+  position: relative;
+}
+
+.field-number.double::after {
+  content: '2×';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ff6b6b;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 0.7rem;
+  font-weight: 700;
+}
+
+/* Place Bets */
+.place-bets-section {
+  background: rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(100, 149, 237, 0.6);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.place-bets-label {
+  text-align: center;
+  color: #6495ed;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.place-numbers {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.place-bet-box {
+  background: rgba(100, 149, 237, 0.2);
+  border: 2px solid #6495ed;
+  border-radius: 8px;
+  padding: 15px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.place-bet-box:hover {
+  background: rgba(100, 149, 237, 0.35);
+  transform: scale(1.05);
+}
+
+.place-bet-box.active {
+  background: rgba(100, 149, 237, 0.5);
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(100, 149, 237, 0.8);
+}
+
+.place-number {
+  font-size: 1.8rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 5px;
+}
+
+.place-payout {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Horizontal Place Bets (Center) */
+.place-bets-section-center {
+  background: rgba(0, 0, 0, 0.2);
+  border: 3px solid rgba(100, 149, 237, 0.6);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.place-numbers-horizontal {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 8px;
+}
+
+.place-bet-box-horiz {
+  background: rgba(100, 149, 237, 0.2);
+  border: 2px solid #6495ed;
+  border-radius: 8px;
+  padding: 20px 10px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  min-height: 90px;
+}
+
+.place-bet-box-horiz:hover {
+  background: rgba(100, 149, 237, 0.35);
+  transform: scale(1.05);
+}
+
+.place-bet-box-horiz.active {
+  background: rgba(100, 149, 237, 0.5);
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(100, 149, 237, 0.8);
+}
+
+.place-bet-box-horiz.is-point {
+  border-color: #ffd700;
+  border-width: 3px;
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.8);
+}
+
+/* Point Puck */
+.point-puck {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: radial-gradient(circle at 30% 30%, #ffd700, #ffed4e);
+  color: #000;
+  font-weight: 900;
+  font-size: 0.7rem;
+  padding: 4px 8px;
+  border-radius: 50%;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 28px;
+  text-align: center;
+}
+
+/* Horizontal Field Numbers */
+.field-numbers-horizontal {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+/* Proposition Bets Center */
+.prop-section {
+  background: rgba(220, 20, 60, 0.15);
+  border: 3px solid rgba(220, 20, 60, 0.6);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.prop-label {
+  text-align: center;
+  color: #ff6b88;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.prop-bets-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.prop-bet-box {
+  background: rgba(220, 20, 60, 0.25);
+  border: 2px solid #dc143c;
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.prop-bet-box:hover {
+  background: rgba(220, 20, 60, 0.4);
+  transform: scale(1.05);
+}
+
+.prop-bet-box.active {
+  background: rgba(220, 20, 60, 0.6);
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(220, 20, 60, 0.8);
+}
+
+.prop-bet-label {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 3px;
+}
+
+.prop-bet-payout {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Hardways */
+.hardways-section {
+  background: rgba(138, 43, 226, 0.15);
+  border: 3px solid rgba(138, 43, 226, 0.6);
+  border-radius: 10px;
+  padding: 15px;
+}
+
+.hardways-label {
+  text-align: center;
+  color: #ba8bff;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 10px;
+}
+
+.hardways-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.hardway-box {
+  background: rgba(138, 43, 226, 0.25);
+  border: 2px solid #8a2be2;
+  border-radius: 8px;
+  padding: 12px 8px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+}
+
+.hardway-box:hover {
+  background: rgba(138, 43, 226, 0.4);
+  transform: scale(1.05);
+}
+
+.hardway-box.active {
+  background: rgba(138, 43, 226, 0.6);
+  border-color: #fff;
+  box-shadow: 0 0 15px rgba(138, 43, 226, 0.8);
+}
+
+/* Bet chips on areas */
+.bet-chip {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  background: radial-gradient(circle at 30% 30%, #ffd700, #ffed4e);
+  color: #000;
+  padding: 4px 8px;
+  border-radius: 50%;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  min-width: 35px;
+  text-align: center;
+}
+
+/* Hover effects */
+.pass-line-corner:hover, .pass-line-main:hover,
+.dont-pass-corner:hover, .dont-pass-main:hover,
+.come-area:hover, .dont-come-area:hover,
+.field-container:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 20px rgba(255, 215, 0, 0.5);
+}
+
+.pass-line-corner.active, .pass-line-main.active,
+.dont-pass-corner.active, .dont-pass-main.active,
+.come-area.active, .dont-come-area.active,
+.field-container.active {
+  box-shadow: 0 0 25px rgba(255, 215, 0, 0.8);
+  border-width: 4px;
+}
+
+/* Game Info */
+.game-info-craps {
+  display: flex;
+  justify-content: space-around;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 15px;
+  margin-bottom: 20px;
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.info-item {
+  text-align: center;
+}
+
+.info-item .label {
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.info-item .value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #ffd700;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.point-marker {
+  background: radial-gradient(circle at 30% 30%, #ffd700, #ffed4e);
+  border: 4px solid #fff;
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #000;
+  margin: 0 auto;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+/* Your Bets Display */
+.your-bets {
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid rgba(255, 215, 0, 0.4);
+  border-radius: 10px;
+  padding: 15px;
+  margin-top: 15px;
+}
+
+.your-bets h3 {
+  color: #ffd700;
+  margin-bottom: 10px;
+  font-size: 1.1rem;
+  text-align: center;
+}
+
+.your-bets .bet-chip {
+  position: static;
+  display: inline-block;
+  margin: 5px;
+  padding: 6px 12px;
+  border-radius: 20px;
+}
+
+/* Controls */
+.craps-controls {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-top: 20px;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+}
+
+.chip-selector {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.chip-selector label {
+  color: #ffd700;
+  font-weight: 600;
+  font-size: 1rem;
+}
+
+.chip-option {
+  width: 65px;
+  height: 65px;
+  border-radius: 50%;
+  border: 4px solid #ffd700;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  position: relative;
+}
+
+.chip-option::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+}
+
+.chip-option:hover {
+  transform: scale(1.15);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+}
+
+.chip-option.selected {
+  border-color: #fff;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.9);
+  transform: scale(1.2);
+}
+
+.chip-option.chip-5 {
+  background: radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a);
+}
+
+.chip-option.chip-10 {
+  background: radial-gradient(circle at 30% 30%, #51cf66, #2f9e44);
+}
+
+.chip-option.chip-25 {
+  background: radial-gradient(circle at 30% 30%, #339af0, #1864ab);
+}
+
+.chip-option.chip-100 {
+  background: radial-gradient(circle at 30% 30%, #2d2d2d, #1a1a1a);
+}
+
+.btn-action {
+  padding: 14px 35px;
+  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
+  color: #000;
+  border: none;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.btn-action:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.btn-clear {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: #fff;
+}

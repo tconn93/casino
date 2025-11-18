@@ -1,0 +1,39 @@
+.card {
+  width: 60px;
+  height: 90px;
+  background: white;
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  margin: 5px;
+  font-weight: 700;
+}
+
+.card-back {
+  background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+  color: #ffd700;
+  font-size: 2rem;
+}
+
+.card.red {
+  color: #e74c3c;
+}
+
+.card.black {
+  color: #2c3e50;
+}
+
+.card-rank {
+  font-size: 1.5rem;
+  position: absolute;
+  top: 5px;
+  left: 8px;
+}
+
+.card-suit {
+  font-size: 2rem;
+}
