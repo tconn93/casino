@@ -8,12 +8,17 @@ class BaccaratGame {
     this.deck = shuffleDeck(createDeck());
     this.playerHand = [];
     this.bankerHand = [];
-    this.bets = new Map(); // socketId -> { type, amount }
+    this.bets = new Map(); // socketId -> Map<betType, amount>
   }
 
-  placeBet(socketId, betType, amount) {
-    this.bets.set(socketId, { type: betType, amount });
+placeBet(socketId, betType, amount) {
+  if (!this.bets.has(socketId)) {
+    this.bets.set(socketId, new Map());
   }
+  const playerBets = this.bets.get(socketId);
+  const current = playerBets.get(betType) || 0;
+  playerBets.set(betType, current + amount);
+}
 
   getCardValue(card) {
     if (['J', 'Q', 'K'].includes(card.rank)) return 0;
@@ -93,22 +98,43 @@ class BaccaratGame {
     return 'tie';
   }
 
-  calculateWinnings(socketId, winner) {
-    const bet = this.bets.get(socketId);
-    if (!bet) return 0;
-
-    if (bet.type === winner) {
-      if (winner === 'player') return bet.amount * 2;
-      if (winner === 'banker') return bet.amount * 1.95; // 5% commission
-      if (winner === 'tie') return bet.amount * 9;
+calculateWinnings(socketId, winner) {
+  let totalWin = 0;
+  const playerBets = this.bets.get(socketId);
+  if (playerBets) {
+    for (const [betType, amount] of playerBets.entries()) {
+      let winForType = 0;
+      if (winner === 'tie') {
+        if (betType === 'tie') {
+          winForType = amount * 9; // 8:1 + stake
+        } else {
+          winForType = amount; // push
+        }
+      } else {
+        if (betType === winner) {
+          if (winner === 'player') {
+            winForType = amount * 2;
+          } else if (winner === 'banker') {
+            winForType = amount * 1.95;
+          }
+        } else if (betType === 'tie') {
+          winForType = 0; // lose
+        } else {
+          winForType = 0; // lose
+        }
+      }
+      totalWin += winForType;
     }
-
-    if (winner === 'tie' && bet.type !== 'tie') {
-      return bet.amount; // Push
-    }
-
-    return 0;
   }
+  return totalWin;
+}
+
+//     if (winner === 'tie' && bet.type !== 'tie') {
+//       return bet.amount; // Push
+//     }
+
+//     return 0;
+//   }
 }
 
 async function handleAction(table, socket, data) {
@@ -149,27 +175,29 @@ async function handleAction(table, socket, data) {
     // Process winnings for all players
     const playerResults = [];
     for (const player of table.players) {
-      if (game.bets.has(player.socketId)) {
-        const winAmount = game.calculateWinnings(player.socketId, winner);
-        const bet = game.bets.get(player.socketId);
-
-        if (winAmount > bet.amount) {
-          Wallet.credit(player.userId, winAmount, 'baccarat', 'Baccarat win');
-          User.updateStats(player.userId, 'baccarat', true, bet.amount, winAmount);
-        } else if (winAmount === bet.amount) {
-          // Push
-          Wallet.credit(player.userId, winAmount, 'baccarat', 'Baccarat push');
-        } else {
-          User.updateStats(player.userId, 'baccarat', false, bet.amount, 0);
+      const playerBetsMap = game.bets.get(player.socketId);
+      let totalBetAmount = 0;
+      if (playerBetsMap) {
+        for (const [, amt] of playerBetsMap) {
+          totalBetAmount += amt;
         }
-
-        playerResults.push({
-          username: player.username,
-          bet: bet,
-          winAmount,
-          netProfit: winAmount - bet.amount
-        });
       }
+      const winAmount = game.calculateWinnings(player.socketId, winner);
+      const netProfit = winAmount - totalBetAmount;
+      if (winAmount > totalBetAmount) {
+        await Wallet.credit(player.userId, winAmount, 'baccarat', 'Baccarat win');
+        await User.updateStats(player.userId, 'baccarat', true, totalBetAmount, winAmount);
+      } else if (winAmount === totalBetAmount && totalBetAmount > 0) {
+        await Wallet.credit(player.userId, winAmount, 'baccarat', 'Baccarat push');
+      } else if (totalBetAmount > 0) {
+        await User.updateStats(player.userId, 'baccarat', false, totalBetAmount, 0);
+      }
+      playerResults.push({
+        username: player.username,
+        bets: playerBetsMap ? Array.from(playerBetsMap.entries()).map(([type, amt]) => ({type, amount: amt})) : [],
+        winAmount,
+        netProfit
+      });
     }
 
     const playerValue = game.calculateHandValue(game.playerHand);

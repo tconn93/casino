@@ -61,8 +61,30 @@ function CrapsGame() {
           myMovements.forEach(movement => {
             if (movement.type === 'come') {
               movementMessage += ` Your $${movement.amount} Come bet moved to ${movement.number}.`;
+              // Update local bets to reflect moved status
+              setBets(prevBets => {
+                const newBets = [...prevBets];
+                const comeIndex = newBets.findLastIndex(b => b.betType === 'come' && !b.moved);
+                if (comeIndex !== -1) {
+                  newBets[comeIndex].label = `Come on ${movement.number}`;
+                  newBets[comeIndex].moved = true;
+                  newBets[comeIndex].number = movement.number;
+                }
+                return newBets;
+              });
             } else if (movement.type === 'dontCome') {
               movementMessage += ` Your $${movement.amount} Don't Come bet moved to ${movement.number}.`;
+              // Similar for don't come
+              setBets(prevBets => {
+                const newBets = [...prevBets];
+                const dontComeIndex = newBets.findLastIndex(b => b.betType === 'dontCome' && !b.moved);
+                if (dontComeIndex !== -1) {
+                  newBets[dontComeIndex].label = `Don't Come on ${movement.number}`;
+                  newBets[dontComeIndex].moved = true;
+                  newBets[dontComeIndex].number = movement.number;
+                }
+                return newBets;
+              });
             }
           });
         }
@@ -88,26 +110,36 @@ function CrapsGame() {
         setMessage(`Rolled ${data.roll.total}${data.point ? ` - Point is ${data.point}` : ''}${movementMessage}`);
       }
 
-      if (data.phase === 'comeOut') {
-        setTimeout(() => {
-          setBets([]);
-          setActiveBets({});
-          setComeBets([]);
-          setDontComeBets([]);
-          setMessage('New come-out roll! Place your bets.');
-        }, 3000);
-      } else {
-        // In point phase, remove Come/Don't Come bets from the bets list after they move
-        setTimeout(() => {
-          setBets(prev => prev.filter(b => b.betType !== 'come' && b.betType !== 'dontCome'));
-          setActiveBets(prev => {
-            const updated = { ...prev };
-            delete updated.come;
-            delete updated.dontCome;
-            return updated;
-          });
-        }, 1000);
-      }
+        if (data.phase === 'comeOut') {
+          setTimeout(() => {
+            setBets(prev => prev.filter(b => !b.resolved)); // Keep unresolved bets like place, moved come
+            setActiveBets(prev => {
+              // Clear resolved active bets like pass if resolved
+              const updated = { ...prev };
+              if (data.roll.total === 7 || data.roll.total === point) {
+                delete updated.pass;
+                delete updated.dontPass;
+              }
+              return updated;
+            });
+            if (data.roll.total === 7) {
+              setComeBets([]);
+              setDontComeBets([]);
+            }
+            setMessage('New come-out roll! Place your bets.');
+          }, 3000);
+        } else {
+          // In point phase, mark resolved bets
+          setTimeout(() => {
+            setBets(prev => prev.map(b => ({ ...b, resolved: data.roll.total === 7 || (data.roll.total === point && ['pass', 'dontPass'].includes(b.betType)) })));
+            setActiveBets(prev => {
+              const updated = { ...prev };
+              if (updated.come !== undefined) updated.come = 0;
+              if (updated.dontCome !== undefined) updated.dontCome = 0;
+              return updated;
+            });
+          }, 1000);
+        }
     }
   };
 
@@ -116,27 +148,23 @@ function CrapsGame() {
     setRolling(false);
   };
 
-  const placeBet = (betType, betLabel) => {
-    if (chipValue > user.balance) {
-      setMessage('Insufficient funds!');
-      return;
-    }
+const placeBet = (betType, betLabel) => {
+  if (chipValue > user.balance) {
+    setMessage('Insufficient funds!');
+    return;
+  }
 
-    // Validate Come/Don't Come bets can only be placed after point is set
-    if ((betType === 'come' || betType === 'dontCome') && phase === 'comeOut') {
-      setMessage('Come and Don\'t Come bets can only be placed after the point is established!');
-      return;
-    }
 
-    socket.gameAction('placeBet', { betType, amount: chipValue });
-    setBets([...bets, { betType, amount: chipValue, label: betLabel }]);
 
-    // Track active bets for visual feedback
-    setActiveBets(prev => ({
-      ...prev,
-      [betType]: (prev[betType] || 0) + chipValue
-    }));
-  };
+  socket.gameAction('placeBet', { betType, amount: chipValue });
+  setBets(prev => [...prev, { betType, amount: chipValue, label: betLabel, resolved: false }]);
+
+  // Track active bets for visual feedback - only for new bets, persist ongoing
+  setActiveBets(prev => ({
+    ...prev,
+    [betType]: (prev[betType] || 0) + chipValue
+  }));
+};
 
   const roll = () => {
     if (bets.length === 0) {
@@ -228,12 +256,10 @@ function CrapsGame() {
               {/* Left Section - Come & One Roll Bets */}
               <div className="left-section">
                 <div
-                  className={`come-area ${activeBets['come'] ? 'active' : ''} ${phase === 'comeOut' ? 'disabled' : ''}`}
+                  className={`come-area ${activeBets['come'] ? 'active' : ''}`}
                   onClick={() => placeBet('come', 'Come')}
-                  style={{ opacity: phase === 'comeOut' ? 0.5 : 1, cursor: phase === 'comeOut' ? 'not-allowed' : 'pointer' }}
                 >
                   COME
-                  {phase === 'comeOut' && <div style={{ fontSize: '0.7rem', marginTop: '5px', color: '#fff' }}>(Point phase only)</div>}
                   {activeBets['come'] > 0 && <div className="bet-chip">${activeBets['come']}</div>}
                 </div>
 
@@ -283,22 +309,42 @@ function CrapsGame() {
                       const moved = getMovedBetsForNumber(number);
                       const payouts = { 4: '9:5', 5: '7:5', 6: '7:6', 8: '7:6', 9: '7:5', 10: '9:5' };
                       return (
-                        <div key={number} className={`place-bet-box-horiz ${activeBets[`place${number}`] ? 'active' : ''} ${point === number ? 'is-point' : ''}`} onClick={() => placeBet(`place${number}`, `Place ${number}`)}>
-                          {point === number && <div className="point-puck">ON</div>}
-                          <div className="place-number">{number}</div>
-                          <div className="place-payout">{payouts[number]}</div>
-                          {activeBets[`place${number}`] > 0 && <div className="bet-chip">${activeBets[`place${number}`]}</div>}
-                          {moved.comeBets.map((bet, i) => (
-                            <div key={`come-${i}`} className="bet-chip" style={{ top: '55px', left: '5px', background: 'radial-gradient(circle at 30% 30%, #51cf66, #2f9e44)' }}>
-                              C ${bet.amount}
-                            </div>
-                          ))}
-                          {moved.dontComeBets.map((bet, i) => (
-                            <div key={`dontcome-${i}`} className="bet-chip" style={{ top: '55px', right: '5px', background: 'radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)' }}>
-                              DC ${bet.amount}
-                            </div>
-                          ))}
-                        </div>
+                    <div key={number} className={`place-bet-box-horiz ${activeBets[`place${number}`] ? 'active' : ''} ${point === number ? 'is-point' : ''}`} onClick={() => placeBet(`place${number}`, `Place ${number}`)} style={{position: 'relative', overflow: 'visible'}}>
+                      {point === number && <div className="point-puck">ON</div>}
+                      <div className="place-number">{number}</div>
+                      <div className="place-payout">{payouts[number]}</div>
+                      {activeBets[`place${number}`] > 0 && <div className="bet-chip">${activeBets[`place${number}`]}</div>}
+                    {moved.comeBets.map((bet, i) => (
+                      <div key={`come-${number}-${i}`} className="bet-chip" style={{ 
+                        position: 'absolute', 
+                        top: `${10 + i * 25}px`, 
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        background: 'radial-gradient(circle at 30% 30%, #51cf66, #2f9e44)', 
+                        fontSize: '0.8em',
+                        padding: '2px 5px',
+                        minWidth: '40px',
+                        textAlign: 'center'
+                      }}>
+                        C ${bet.amount}
+                      </div>
+                    ))}
+                    {moved.dontComeBets.map((bet, i) => (
+                      <div key={`dontcome-${number}-${i}`} className="bet-chip" style={{ 
+                        position: 'absolute', 
+                        top: `${10 + i * 25}px`, 
+                        right: '10px', 
+                        left: 'auto', 
+                        background: 'radial-gradient(circle at 30% 30%, #ff6b6b, #c92a2a)', 
+                        fontSize: '0.8em',
+                        padding: '2px 5px',
+                        minWidth: '40px',
+                        textAlign: 'center'
+                      }}>
+                        DC ${bet.amount}
+                      </div>
+                    ))}
+                    </div>
                       );
                     })}
                   </div>
@@ -322,12 +368,10 @@ function CrapsGame() {
               {/* Right Section - Don't Come & Hardways */}
               <div className="right-section">
                 <div
-                  className={`dont-come-area ${activeBets['dontCome'] ? 'active' : ''} ${phase === 'comeOut' ? 'disabled' : ''}`}
+                  className={`dont-come-area ${activeBets['dontCome'] ? 'active' : ''}`}
                   onClick={() => placeBet('dontCome', "Don't Come")}
-                  style={{ opacity: phase === 'comeOut' ? 0.5 : 1, cursor: phase === 'comeOut' ? 'not-allowed' : 'pointer' }}
                 >
                   DON'T COME
-                  {phase === 'comeOut' && <div style={{ fontSize: '0.7rem', marginTop: '5px', color: '#ddd' }}>(Point phase only)</div>}
                   {activeBets['dontCome'] > 0 && <div className="bet-chip">${activeBets['dontCome']}</div>}
                 </div>
 
@@ -402,20 +446,28 @@ function CrapsGame() {
           <div className="chip-selector">
             <label>Select Chip:</label>
             <div className={`chip-option chip-5 ${chipValue === 5 ? 'selected' : ''}`}
-                 onClick={() => setChipValue(5)}>
+                onClick={() => setChipValue(5)}>
               $5
             </div>
             <div className={`chip-option chip-10 ${chipValue === 10 ? 'selected' : ''}`}
-                 onClick={() => setChipValue(10)}>
+                onClick={() => setChipValue(10)}>
               $10
             </div>
             <div className={`chip-option chip-25 ${chipValue === 25 ? 'selected' : ''}`}
-                 onClick={() => setChipValue(25)}>
+                onClick={() => setChipValue(25)}>
               $25
             </div>
             <div className={`chip-option chip-100 ${chipValue === 100 ? 'selected' : ''}`}
-                 onClick={() => setChipValue(100)}>
+                onClick={() => setChipValue(100)}>
               $100
+            </div>
+            <div className={`chip-option chip-500 ${chipValue === 500 ? 'selected' : ''}`}
+                onClick={() => setChipValue(500)}>
+              $500
+            </div>
+            <div className={`chip-option chip-1000 ${chipValue === 1000 ? 'selected' : ''}`}
+                onClick={() => setChipValue(1000)}>
+              $1000
             </div>
           </div>
 
