@@ -6,6 +6,7 @@ import api from '../services/api';
 import GameLayout from '../components/GameLayout';
 import Card from '../components/Card';
 import './Game.css';
+import './BlackjackGame.css';
 
 function BlackjackGame() {
   const { tableId } = useParams();
@@ -135,7 +136,7 @@ const doubleDown = () => {
   </div>
 
   {!gameState && (
-    <div className="table-felt" style={{backgroundColor: '#0a3d0a', padding: '20px', margin: '10px 0', borderRadius: '10px', position: 'relative'}}>
+    <div className="table-felt">
       <div 
         className="bet-area" 
         onClick={() => {
@@ -179,16 +180,16 @@ const doubleDown = () => {
 
 <div className="controls">
   {!gameState && (
-    <div className="blackjack-controls">
-<div className="chip-selector">
-  <label>Select Chip:</label>
-  <div className={`chip-option ${chipValue === 5 ? 'selected' : ''}`} onClick={() => setChipValue(5)}>$5</div>
-  <div className={`chip-option ${chipValue === 10 ? 'selected' : ''}`} onClick={() => setChipValue(10)}>$10</div>
-  <div className={`chip-option ${chipValue === 25 ? 'selected' : ''}`} onClick={() => setChipValue(25)}>$25</div>
-  <div className={`chip-option ${chipValue === 100 ? 'selected' : ''}`} onClick={() => setChipValue(100)}>$100</div>
-  <div className={`chip-option ${chipValue === 500 ? 'selected' : ''}`} onClick={() => setChipValue(500)}>$500</div>
-  <div className={`chip-option ${chipValue === 1000 ? 'selected' : ''}`} onClick={() => setChipValue(1000)}>$1000</div>
-</div>
+    <>
+      <div className="chip-selector">
+        <label>Select Chip:</label>
+        <div className={`chip-option ${chipValue === 5 ? 'selected' : ''}`} onClick={() => setChipValue(5)} data-value="5">$5</div>
+        <div className={`chip-option ${chipValue === 10 ? 'selected' : ''}`} onClick={() => setChipValue(10)} data-value="10">$10</div>
+        <div className={`chip-option ${chipValue === 25 ? 'selected' : ''}`} onClick={() => setChipValue(25)} data-value="25">$25</div>
+        <div className={`chip-option ${chipValue === 100 ? 'selected' : ''}`} onClick={() => setChipValue(100)} data-value="100">$100</div>
+        <div className={`chip-option ${chipValue === 500 ? 'selected' : ''}`} onClick={() => setChipValue(500)} data-value="500">$500</div>
+        <div className={`chip-option ${chipValue === 1000 ? 'selected' : ''}`} onClick={() => setChipValue(1000)} data-value="1000">$1000</div>
+      </div>
       {totalBet > 0 && (
         <button onClick={() => setTotalBet(0)} className="btn-action btn-clear">
           Clear Bet
@@ -201,7 +202,7 @@ const doubleDown = () => {
       >
         Place Bet
       </button>
-    </div>
+    </>
   )}
 
   {gameState === 'playing' && (

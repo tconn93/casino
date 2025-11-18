@@ -5,6 +5,7 @@ import socket from '../services/socket';
 import api from '../services/api';
 import GameLayout from '../components/GameLayout';
 import './Game.css';
+import './RouletteGame.css';
 
 function RouletteGame() {
   const { tableId } = useParams();

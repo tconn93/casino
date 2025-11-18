@@ -1,31 +1,17 @@
 .craps-table-container {
-  background: #0a5f0a;
-  border: 15px solid #8b4513;
+  background: radial-gradient(circle, #006600 0%, #004400 100%);
+  border: 10px solid #b8860b;
   border-radius: 30px;
-  padding: 30px;
+  padding: 20px;
   margin: 20px auto;
   max-width: 1100px;
-  box-shadow: 0 10px 50px rgba(0, 0, 0, 0.7);
-  position: relative;
-}
-
-.craps-table-container::before {
-  content: '';
-  position: absolute;
-  top: -10px;
-  left: -10px;
-  right: -10px;
-  bottom: -10px;
-  background: linear-gradient(135deg, #654321 0%, #8b4513 50%, #654321 100%);
-  border-radius: 35px;
-  z-index: -1;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .table-felt {
-  background: linear-gradient(135deg, #0a5f0a 0%, #0d7f0d 50%, #0a5f0a 100%);
-  padding: 25px;
+  background: transparent;
+  padding: 15px;
   border-radius: 15px;
-  box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.3);
 }
 
 .craps-layout {
@@ -58,9 +44,10 @@
   margin-top: 10px;
 }
 
-.pass-line-corner {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.15) 100%);
-  border: 3px solid #ffd700;
+.pass-line-corner, .pass-line-main {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffd700;
+  color: #ffd700;
   border-radius: 10px;
   padding: 15px;
   text-align: center;
@@ -68,41 +55,12 @@
   transition: all 0.2s;
 }
 
-.pass-line-main {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.25) 0%, rgba(255, 215, 0, 0.15) 100%);
-  border: 3px solid #ffd700;
-  border-radius: 10px;
-  padding: 20px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-}
-
-/* Don't Pass Bar */
-.dont-pass-container {
-  grid-column: 1 / -1;
-  display: grid;
-  grid-template-columns: 1fr 3fr 1fr;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.dont-pass-corner {
-  background: rgba(0, 0, 0, 0.4);
-  border: 3px solid #ddd;
+.dont-pass-corner, .dont-pass-main {
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #d90000;
+  color: #d90000;
   border-radius: 10px;
   padding: 15px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.dont-pass-main {
-  background: rgba(0, 0, 0, 0.4);
-  border: 3px solid #ddd;
-  border-radius: 10px;
-  padding: 20px;
   text-align: center;
   cursor: pointer;
   transition: all 0.2s;
@@ -110,8 +68,8 @@
 
 /* Come/Don't Come */
 .come-area {
-  background: linear-gradient(135deg, rgba(255, 215, 0, 0.2) 0%, rgba(255, 215, 0, 0.1) 100%);
-  border: 3px solid #ffd700;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #ffd700;
   border-radius: 10px;
   padding: 25px 15px;
   text-align: center;
@@ -123,8 +81,8 @@
 }
 
 .dont-come-area {
-  background: rgba(0, 0, 0, 0.4);
-  border: 3px solid #ddd;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #d90000;
   border-radius: 10px;
   padding: 25px 15px;
   text-align: center;
@@ -132,17 +90,18 @@
   transition: all 0.2s;
   font-size: 1.3rem;
   font-weight: 700;
-  color: #fff;
+  color: #d90000;
 }
 
 /* Field */
 .field-container {
-  background: rgba(255, 255, 255, 0.12);
-  border: 3px solid #ffd700;
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #3498db;
   border-radius: 10px;
   padding: 15px;
   cursor: pointer;
   transition: all 0.2s;
+  color: #3498db;
 }
 
 .field-label {
@@ -252,9 +211,10 @@
 /* Horizontal Place Bets (Center) */
 .place-bets-section-center {
   background: rgba(0, 0, 0, 0.2);
-  border: 3px solid rgba(100, 149, 237, 0.6);
+  border: 2px solid #9b59b6;
   border-radius: 10px;
   padding: 15px;
+  color: #9b59b6;
 }
 
 .place-numbers-horizontal {
@@ -318,10 +278,11 @@
 
 /* Proposition Bets Center */
 .prop-section {
-  background: rgba(220, 20, 60, 0.15);
-  border: 3px solid rgba(220, 20, 60, 0.6);
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #e67e22;
   border-radius: 10px;
   padding: 15px;
+  color: #e67e22;
 }
 
 .prop-label {
@@ -374,10 +335,11 @@
 
 /* Hardways */
 .hardways-section {
-  background: rgba(138, 43, 226, 0.15);
-  border: 3px solid rgba(138, 43, 226, 0.6);
+  background: rgba(0, 0, 0, 0.2);
+  border: 2px solid #1abc9c;
   border-radius: 10px;
   padding: 15px;
+  color: #1abc9c;
 }
 
 .hardways-label {
@@ -520,18 +482,7 @@
   border-radius: 20px;
 }
 
-/* Controls */
-.craps-controls {
-  display: flex;
-  gap: 20px;
-  justify-content: center;
-  align-items: center;
-  flex-wrap: wrap;
-  margin-top: 20px;
-  padding: 20px;
-  background: rgba(0, 0, 0, 0.3);
-  border-radius: 15px;
-}
+
 
 .chip-selector {
   display: flex;
@@ -560,22 +511,11 @@
   font-size: 1.1rem;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   position: relative;
-}
-
-.chip-option::before {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.3);
+  transition: all 0.2s;
 }
 
 .chip-option:hover {
-  transform: scale(1.15);
+  transform: scale(1.1);
   box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
 }
 

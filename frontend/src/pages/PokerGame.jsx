@@ -6,6 +6,7 @@ import api from '../services/api';
 import GameLayout from '../components/GameLayout';
 import Card from '../components/Card';
 import './Game.css';
+import './PokerGame.css';
 
 function PokerGame() {
   const { tableId } = useParams();

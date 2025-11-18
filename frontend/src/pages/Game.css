@@ -7,14 +7,15 @@
 }
 
 .game-area {
-  background: rgba(0, 100, 0, 0.3);
-  border: 3px solid #2ecc71;
+  background: radial-gradient(circle, #006600 0%, #004400 100%);
+  border: 10px solid #b8860b;
   border-radius: 20px;
   padding: 40px;
   min-height: 500px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
 }
 
 .dealer-area, .player-area {
@@ -82,19 +83,27 @@
 
 .btn-action {
   padding: 12px 30px;
-  background: linear-gradient(135deg, #ffd700 0%, #ffed4e 100%);
-  color: #000;
+  background: linear-gradient(to bottom, #d90000, #a30000);
+  color: white;
   border: none;
   border-radius: 10px;
   font-size: 1.1rem;
   font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 4px #6b0000;
 }
 
 .btn-action:hover {
+  background: linear-gradient(to bottom, #e60000, #b30000);
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
+  box-shadow: 0 6px #6b0000;
+}
+
+.btn-action:active {
+  transform: translateY(2px);
+  box-shadow: 0 2px #6b0000;
 }
 
 .btn-action:disabled {

@@ -1,0 +1,48 @@
+.baccarat-bet-areas {
+  display: flex;
+  justify-content: space-around;
+  margin: 20px 0;
+}
+
+.bet-area {
+  cursor: pointer;
+  border: 3px solid rgba(255, 255, 255, 0.6);
+  padding: 20px;
+  margin: 5px;
+  text-align: center;
+  background-color: rgba(0, 0, 0, 0.4);
+  color: #fff;
+  min-width: 150px;
+  border-radius: 15px;
+  transition: all 0.3s;
+  font-size: 1.2em;
+  font-weight: bold;
+}
+
+.bet-area:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-color: #ffd700;
+}
+
+.bet-area.player { border-color: #4a90e2; }
+.bet-area.banker { border-color: #e74c3c; }
+.bet-area.tie { border-color: #2ecc71; }
+
+.bet-area.player.active { background-color: #4a90e2; }
+.bet-area.banker.active { background-color: #e74c3c; }
+.bet-area.tie.active { background-color: #2ecc71; }
+
+.bet-area .bet-chip {
+  font-size: 1.4em;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 10px auto 0;
+  font-weight: bold;
+  border: 2px solid #fff;
+}

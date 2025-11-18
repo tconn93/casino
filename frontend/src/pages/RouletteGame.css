@@ -1,0 +1,56 @@
+.roulette-wheel {
+  width: 300px;
+  height: 300px;
+  border-radius: 50%;
+  background: conic-gradient(
+    green 0deg 9.7deg, black 9.7deg 19.4deg, red 19.4deg 29.1deg, black 29.1deg 38.8deg, red 38.8deg 48.5deg, black 48.5deg 58.2deg, red 58.2deg 67.9deg, black 67.9deg 77.6deg, red 77.6deg 87.3deg, black 87.3deg 97deg, red 97deg 106.7deg, black 106.7deg 116.4deg, red 116.4deg 126.1deg, black 126.1deg 135.8deg, red 135.8deg 145.5deg, black 145.5deg 155.2deg, red 155.2deg 164.9deg, black 164.9deg 174.6deg,
+    green 174.6deg 184.3deg, black 184.3deg 194deg, red 194deg 203.7deg, black 203.7deg 213.4deg, red 213.4deg 223.1deg, black 223.1deg 232.8deg, red 232.8deg 242.5deg, black 242.5deg 252.2deg, red 252.2deg 261.9deg, black 261.9deg 271.6deg, red 271.6deg 281.3deg, black 281.3deg 291deg, red 291deg 300.7deg, black 300.7deg 310.4deg, red 310.4deg 320.1deg, black 320.1deg 329.8deg, red 329.8deg 339.5deg, black 339.5deg 349.2deg, red 349.2deg 360deg
+  );
+  margin: 30px auto;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 10px solid #b8860b;
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.roulette-result {
+  background: white;
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 2rem;
+  font-weight: 700;
+  color: #2c3e50;
+  border: 5px solid #b8860b;
+}
+
+.betting-board {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 10px;
+}
+
+.bet-option {
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  padding: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+  color: white;
+}
+
+.bet-option:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: #ffd700;
+}

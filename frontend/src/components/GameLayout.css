@@ -15,32 +15,36 @@
 
 .game-header h1 {
   color: #ffd700;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   margin: 0;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  font-family: 'Georgia', serif;
 }
 
 .btn-back {
-  background: rgba(255, 255, 255, 0.1);
-  color: white;
-  border: none;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-weight: 600;
+  background: rgba(0, 0, 0, 0.4);
+  color: #ffd700;
+  border: 2px solid #ffd700;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-weight: 700;
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .btn-back:hover {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 215, 0, 0.2);
   transform: translateX(-3px);
 }
 
 .balance-display {
-  background: linear-gradient(135deg, #2ecc71 0%, #27ae60 100%);
-  padding: 8px 16px;
-  border-radius: 20px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 2px solid #ffd700;
+  color: #ffd700;
+  padding: 10px 20px;
+  border-radius: 10px;
   font-weight: 700;
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .game-content {

@@ -6,6 +6,7 @@ import api from '../services/api';
 import GameLayout from '../components/GameLayout';
 import Card from '../components/Card';
 import './Game.css';
+import './BaccaratGame.css';
 
 function BaccaratGame() {
   const { tableId } = useParams();
@@ -136,100 +137,67 @@ const deal = () => {
   </div>
 
   {playerHand.length === 0 && (
-    <div className="table-felt" style={{backgroundColor: '#0a3d0a', padding: '20px', margin: '10px 0', borderRadius: '10px', position: 'relative'}}>
-      <div className="baccarat-bet-areas" style={{display: 'flex', justifyContent: 'space-around', margin: '20px 0'}}>
-        <div 
-          className="bet-area player"
-          onClick={() => placeBet('player')}
-          style={{
-            cursor: 'pointer', 
-            border: '2px solid #4a90e2', 
-            padding: '20px', 
-            margin: '5px', 
-            textAlign: 'center', 
-            backgroundColor: activeBets.player > 0 ? '#4a90e2' : 'rgba(0,0,0,0.3)', 
-            color: activeBets.player > 0 ? 'white' : '#fff',
-            minWidth: '120px',
-            borderRadius: '8px'
-          }}
-        >
-          <div style={{fontSize: '1.1em', fontWeight: 'bold'}}>PLAYER</div>
-          <div style={{marginTop: '5px'}}>1:1</div>
-          {activeBets.player > 0 && <div className="bet-chip" style={{fontSize: '1.2em', color: '#fff', background: 'radial-gradient(circle, #4a90e2, #357abd)', borderRadius: '50%', width: '50px', height: '50px', display: 'block', margin: '0 auto', alignItems: 'center', justifyContent: 'center'}}>${activeBets.player}</div>}
-        </div>
-        <div 
-          className="bet-area tie"
-          onClick={() => placeBet('tie')}
-          style={{
-            cursor: 'pointer', 
-            border: '2px solid #ff6b6b', 
-            padding: '20px', 
-            margin: '5px', 
-            textAlign: 'center', 
-            backgroundColor: activeBets.tie > 0 ? '#ff6b6b' : 'rgba(0,0,0,0.3)', 
-            color: activeBets.tie > 0 ? 'white' : '#fff',
-            minWidth: '120px',
-            borderRadius: '8px'
-          }}
-        >
-          <div style={{fontSize: '1.1em', fontWeight: 'bold'}}>TIE</div>
-          <div style={{marginTop: '5px'}}>8:1</div>
-          {activeBets.tie > 0 && <div className="bet-chip" style={{fontSize: '1.2em', color: '#fff', background: 'radial-gradient(circle, #ff6b6b, #ee5a52)', borderRadius: '50%', width: '50px', height: '50px', display: 'block', margin: '0 auto', alignItems: 'center', justifyContent: 'center'}}>${activeBets.tie}</div>}
-        </div>
-        <div 
-          className="bet-area banker"
-          onClick={() => placeBet('banker')}
-          style={{
-            cursor: 'pointer', 
-            border: '2px solid #ffd700', 
-            padding: '20px', 
-            margin: '5px', 
-            textAlign: 'center', 
-            backgroundColor: activeBets.banker > 0 ? '#ffd700' : 'rgba(0,0,0,0.3)', 
-            color: activeBets.banker > 0 ? 'black' : '#fff',
-            minWidth: '120px',
-            borderRadius: '8px'
-          }}
-        >
-          <div style={{fontSize: '1.1em', fontWeight: 'bold'}}>BANKER</div>
-          <div style={{marginTop: '5px'}}>0.95:1</div>
-          {activeBets.banker > 0 && <div className="bet-chip" style={{fontSize: '1.2em', color: '#000', background: 'radial-gradient(circle, #ffd700, #ffed4e)', borderRadius: '50%', width: '50px', height: '50px', display: 'block', margin: '0 auto', alignItems: 'center', justifyContent: 'center', fontWeight: 'bold'}}>${activeBets.banker}</div>}
-        </div>
-      </div>
-      <div style={{textAlign: 'center', color: 'white', margin: '10px'}}>
-        Total Bet: <strong>${Object.values(activeBets).reduce((sum, val) => sum + val, 0)}</strong>
-      </div>
-    </div>
-  )}
+    <div className="table-felt">
+      <div className="bet-areas">
+  <div 
+    className={`bet-area player ${activeBets.player > 0 ? 'active' : ''}`}
+    onClick={() => placeBet('player')}
+  >
+    <div>PLAYER</div>
+    <div>1:1</div>
+    {activeBets.player > 0 && <div className="bet-chip">${activeBets.player}</div>}
+  </div>
+  <div 
+    className={`bet-area tie ${activeBets.tie > 0 ? 'active' : ''}`}
+    onClick={() => placeBet('tie')}
+  >
+    <div>TIE</div>
+    <div>8:1</div>
+    {activeBets.tie > 0 && <div className="bet-chip">${activeBets.tie}</div>}
+  </div>
+  <div 
+    className={`bet-area banker ${activeBets.banker > 0 ? 'active' : ''}`}
+    onClick={() => placeBet('banker')}
+  >
+    <div>BANKER</div>
+    <div>0.95:1</div>
+    {activeBets.banker > 0 && <div className="bet-chip">${activeBets.banker}</div>}
+  </div>
+</div>
+<div style={{textAlign: 'center', color: 'white', margin: '10px'}}>
+  Total Bet: <strong>${Object.values(activeBets).reduce((sum, val) => sum + val, 0)}</strong>
+</div>
+</div>
+)}
 </div>
 
-        <div className="controls">
-{playerHand.length === 0 && (
-  <div className="baccarat-controls">
-<div className="chip-selector">
-  <label>Select Chip:</label>
-  <div className={`chip-option ${chipValue === 5 ? 'selected' : ''}`} onClick={() => setChipValue(5)}>$5</div>
-  <div className={`chip-option ${chipValue === 10 ? 'selected' : ''}`} onClick={() => setChipValue(10)}>$10</div>
-  <div className={`chip-option ${chipValue === 25 ? 'selected' : ''}`} onClick={() => setChipValue(25)}>$25</div>
-  <div className={`chip-option ${chipValue === 100 ? 'selected' : ''}`} onClick={() => setChipValue(100)}>$100</div>
-  <div className={`chip-option ${chipValue === 500 ? 'selected' : ''}`} onClick={() => setChipValue(500)}>$500</div>
-  <div className={`chip-option ${chipValue === 1000 ? 'selected' : ''}`} onClick={() => setChipValue(1000)}>$1000</div>
-</div>
-    {Object.values(activeBets).reduce((sum, val) => sum + val, 0) > 0 && (
-      <button onClick={() => setActiveBets({player: 0, banker: 0, tie: 0})} className="btn-action btn-clear">
-        Clear Bets
+<div className="controls">
+  {playerHand.length === 0 && (
+    <>
+      <div className="chip-selector">
+        <label>Select Chip:</label>
+        <div className={`chip-option ${chipValue === 5 ? 'selected' : ''}`} onClick={() => setChipValue(5)} data-value="5">$5</div>
+        <div className={`chip-option ${chipValue === 10 ? 'selected' : ''}`} onClick={() => setChipValue(10)} data-value="10">$10</div>
+        <div className={`chip-option ${chipValue === 25 ? 'selected' : ''}`} onClick={() => setChipValue(25)} data-value="25">$25</div>
+        <div className={`chip-option ${chipValue === 100 ? 'selected' : ''}`} onClick={() => setChipValue(100)} data-value="100">$100</div>
+        <div className={`chip-option ${chipValue === 500 ? 'selected' : ''}`} onClick={() => setChipValue(500)} data-value="500">$500</div>
+        <div className={`chip-option ${chipValue === 1000 ? 'selected' : ''}`} onClick={() => setChipValue(1000)} data-value="1000">$1000</div>
+      </div>
+      {Object.values(activeBets).reduce((sum, val) => sum + val, 0) > 0 && (
+        <button onClick={() => setActiveBets({player: 0, banker: 0, tie: 0})} className="btn-action btn-clear">
+          Clear Bets
+        </button>
+      )}
+      <button 
+        onClick={deal} 
+        disabled={Object.values(activeBets).reduce((sum, val) => sum + val, 0) === 0}
+        className="btn-action"
+      >
+        Deal Cards
       </button>
-    )}
-    <button 
-      onClick={deal} 
-      disabled={Object.values(activeBets).reduce((sum, val) => sum + val, 0) === 0}
-      className="btn-action"
-    >
-      Deal Cards
-    </button>
-  </div>
-)}
-        </div>
+    </>
+  )}
+</div>
       </div>
     </GameLayout>
   );

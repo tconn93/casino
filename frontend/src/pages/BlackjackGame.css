@@ -1,0 +1,38 @@
+.chip-selector {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+  align-items: center;
+}
+
+.chip-option {
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.3);
+  transition: all 0.2s;
+}
+
+.chip-option:hover {
+  transform: scale(1.1);
+  border-color: #ffd700;
+}
+
+.chip-option.selected {
+  transform: scale(1.1);
+  border-color: #ffd700;
+}
+
+.chip-option[data-value="5"] { background-color: #e74c3c; color: white; }
+.chip-option[data-value="10"] { background-color: #3498db; color: white; }
+.chip-option[data-value="25"] { background-color: #2ecc71; color: white; }
+.chip-option[data-value="100"] { background-color: #2c3e50; color: white; }
+.chip-option[data-value="500"] { background-color: #9b59b6; color: white; }
+.chip-option[data-value="1000"] { background-color: #f1c40f; color: black; }
