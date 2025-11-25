@@ -1,33 +1,23 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+require('dotenv').config();
+const { pool } = require('../models/database');
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../casino.db');
+async function reupBalance() {
+  const client = await pool.connect();
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-    process.exit(1);
+  try {
+    console.log('Updating wallet balance...');
+
+    await client.query('UPDATE wallets SET balance = 10000 WHERE id = 1');
+
+    console.log('Wallet balance updated successfully');
+  } catch (error) {
+    console.error('Error updating wallet balance:', error.message);
+    throw error;
+  } finally {
+    client.release();
+    await pool.end();
+    process.exit(0);
   }
-});
+}
 
-db.serialize(() => {
-  // Enable foreign keys
-  db.run('PRAGMA foreign_keys = ON');
-
-  db.exec(`
-   UPDATE WALLETS SET BALANCE = 10000 WHERE ID = 1;
-  `, (err) => {
-    if (err) {
-      console.error('Error creating tables:', err.message);
-      process.exit(1);
-    } else {
-      console.log('Database initialized successfully');
-      db.close((err) => {
-        if (err) {
-          console.error('Error closing database:', err.message);
-        }
-        process.exit(0);
-      });
-    }
-  });
-});
+reupBalance();

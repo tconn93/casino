@@ -424,6 +424,12 @@ async function handleAction(table, socket, data) {
     // Remove resolved bets from each player's bet array
     for (const [socketId, playerBets] of game.bets.entries()) {
       const unresolvedBets = playerBets.filter(bet => {
+        // Come and Don't Come bets should have already been handled and removed
+        // Skip them here to avoid incorrect evaluation
+        if (bet.type === 'come' || bet.type === 'dontCome') {
+          return false; // Remove these if they somehow remain
+        }
+
         const result = game.evaluateBet(bet, roll);
         // Keep bet if it's not resolved (win: null means bet continues)
         return result.win === null;

@@ -1,58 +1,76 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+const { Pool } = require('pg');
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../casino.db');
-
-// Create database connection
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-  } else {
-    console.log('Connected to SQLite database');
-    // Enable foreign keys
-    db.run('PRAGMA foreign_keys = ON');
-  }
+// Create PostgreSQL connection pool
+const pool = new Pool({
+  host: process.env.POSTGRES_HOST || 'localhost',
+  port: process.env.POSTGRES_PORT || 5432,
+  database: process.env.POSTGRES_DB || 'casino',
+  user: process.env.POSTGRES_USER || 'casino_user',
+  password: process.env.POSTGRES_PASSWORD,
+  max: 20, // Maximum number of clients in the pool
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-// Promisify database methods for easier async/await usage
-const runAsync = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function(err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
-  });
+// Test the connection
+pool.on('connect', () => {
+  console.log('Connected to PostgreSQL database');
+});
+
+pool.on('error', (err) => {
+  console.error('Unexpected error on idle client', err);
+  process.exit(-1);
+});
+
+// Execute a query that modifies data (INSERT, UPDATE, DELETE)
+const runAsync = async (sql, params = []) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(sql, params);
+    return {
+      lastID: result.rows[0]?.id, // For INSERT queries that return id
+      changes: result.rowCount,
+      rows: result.rows
+    };
+  } finally {
+    client.release();
+  }
 };
 
-const getAsync = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.get(sql, params, (err, row) => {
-      if (err) reject(err);
-      else resolve(row);
-    });
-  });
+// Get a single row
+const getAsync = async (sql, params = []) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(sql, params);
+    return result.rows[0];
+  } finally {
+    client.release();
+  }
 };
 
-const allAsync = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
+// Get all matching rows
+const allAsync = async (sql, params = []) => {
+  const client = await pool.connect();
+  try {
+    const result = await client.query(sql, params);
+    return result.rows;
+  } finally {
+    client.release();
+  }
 };
 
-const execAsync = (sql) => {
-  return new Promise((resolve, reject) => {
-    db.exec(sql, (err) => {
-      if (err) reject(err);
-      else resolve();
-    });
-  });
+// Execute raw SQL (for migrations, etc.)
+const execAsync = async (sql) => {
+  const client = await pool.connect();
+  try {
+    await client.query(sql);
+  } finally {
+    client.release();
+  }
 };
 
 module.exports = {
-  db,
+  pool,
   runAsync,
   getAsync,
   allAsync,

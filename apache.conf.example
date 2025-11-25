@@ -1,0 +1,55 @@
+<VirtualHost *:80>
+    ServerName casino.yourdomain.com
+
+    # Document root for the built React frontend
+    DocumentRoot /var/www/casino/frontend/dist
+
+    <Directory /var/www/casino/frontend/dist>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+
+        # Enable client-side routing (React Router)
+        RewriteEngine On
+        RewriteBase /
+        RewriteRule ^index\.html$ - [L]
+        RewriteCond %{REQUEST_FILENAME} !-f
+        RewriteCond %{REQUEST_FILENAME} !-d
+        RewriteCond %{REQUEST_URI} !^/api
+        RewriteCond %{REQUEST_URI} !^/socket.io
+        RewriteRule . /index.html [L]
+    </Directory>
+
+    # Proxy API requests to Node.js backend
+    ProxyPreserveHost On
+    ProxyPass /api http://localhost:3000/api
+    ProxyPassReverse /api http://localhost:3000/api
+
+    # Proxy Socket.IO WebSocket connections
+    # Socket.IO uses /socket.io path by default
+    RewriteEngine On
+    RewriteCond %{REQUEST_URI} ^/socket.io [NC]
+    RewriteCond %{QUERY_STRING} transport=websocket [NC]
+    RewriteRule /(.*) ws://localhost:3000/$1 [P,L]
+
+    ProxyPass /socket.io http://localhost:3000/socket.io
+    ProxyPassReverse /socket.io http://localhost:3000/socket.io
+
+    # Enable WebSocket proxying
+    ProxyPass /socket.io/ http://localhost:3000/socket.io/ upgrade=websocket
+
+    # Logging
+    ErrorLog ${APACHE_LOG_DIR}/casino-error.log
+    CustomLog ${APACHE_LOG_DIR}/casino-access.log combined
+</VirtualHost>
+
+# SSL/HTTPS configuration (recommended for production)
+# <VirtualHost *:443>
+#     ServerName casino.yourdomain.com
+#
+#     SSLEngine on
+#     SSLCertificateFile /path/to/cert.pem
+#     SSLCertificateKeyFile /path/to/key.pem
+#
+#     # ... same configuration as above ...
+# </VirtualHost>

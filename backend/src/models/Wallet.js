@@ -2,12 +2,12 @@ const { runAsync, getAsync, allAsync } = require('./database');
 
 class Wallet {
   static async getBalance(userId) {
-    const result = await getAsync('SELECT balance FROM wallets WHERE user_id = ?', [userId]);
-    return result ? result.balance : 0;
+    const result = await getAsync('SELECT balance FROM wallets WHERE user_id = $1', [userId]);
+    return result ? parseFloat(result.balance) : 0;
   }
 
   static async updateBalance(userId, amount) {
-    await runAsync('UPDATE wallets SET balance = balance + ? WHERE user_id = ?', [amount, userId]);
+    await runAsync('UPDATE wallets SET balance = balance + $1 WHERE user_id = $2', [amount, userId]);
     return this.getBalance(userId);
   }
 
@@ -18,7 +18,7 @@ class Wallet {
 
   static async addTransaction(userId, amount, type, gameType = null, description = null) {
     return runAsync(
-      'INSERT INTO transactions (user_id, amount, type, game_type, description) VALUES (?, ?, ?, ?, ?)',
+      'INSERT INTO transactions (user_id, amount, type, game_type, description) VALUES ($1, $2, $3, $4, $5)',
       [userId, amount, type, gameType, description]
     );
   }
@@ -26,11 +26,16 @@ class Wallet {
   static async getTransactions(userId, limit = 50) {
     const query = `
       SELECT * FROM transactions
-      WHERE user_id = ?
+      WHERE user_id = $1
       ORDER BY created_at DESC
-      LIMIT ?
+      LIMIT $2
     `;
-    return allAsync(query, [userId, limit]);
+    const transactions = await allAsync(query, [userId, limit]);
+    // Convert amount strings to numbers
+    return transactions.map(transaction => ({
+      ...transaction,
+      amount: parseFloat(transaction.amount)
+    }));
   }
 
   static async debit(userId, amount, gameType, description) {

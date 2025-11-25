@@ -1,5 +1,8 @@
 import { io } from 'socket.io-client';
 
+// Use environment variable or fallback to same origin (for production with reverse proxy)
+const SOCKET_URL = import.meta.env.VITE_API_BASE_URL || window.location.origin;
+
 class SocketService {
   constructor() {
     this.socket = null;
@@ -10,7 +13,7 @@ class SocketService {
       return this.socket;
     }
 
-    this.socket = io('http://localhost:3000', {
+    this.socket = io(SOCKET_URL, {
       auth: {
         token
       }

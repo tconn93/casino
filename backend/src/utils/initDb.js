@@ -1,71 +1,89 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
+require('dotenv').config();
+const { pool } = require('../models/database');
 
-const dbPath = process.env.DATABASE_PATH || path.join(__dirname, '../../casino.db');
+async function initializeDatabase() {
+  const client = await pool.connect();
 
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database:', err.message);
-    process.exit(1);
+  try {
+    console.log('Initializing PostgreSQL database...');
+
+    // Drop existing tables (in reverse order of dependencies)
+    await client.query('DROP TABLE IF EXISTS transactions CASCADE');
+    await client.query('DROP TABLE IF EXISTS game_stats CASCADE');
+    await client.query('DROP TABLE IF EXISTS wallets CASCADE');
+    await client.query('DROP TABLE IF EXISTS users CASCADE');
+
+    // Create users table
+    await client.query(`
+      CREATE TABLE users (
+        id SERIAL PRIMARY KEY,
+        username VARCHAR(255) UNIQUE NOT NULL,
+        password VARCHAR(255) NOT NULL,
+        email VARCHAR(255) UNIQUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    console.log('Created users table');
+
+    // Create wallets table
+    await client.query(`
+      CREATE TABLE wallets (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER UNIQUE NOT NULL,
+        balance DECIMAL(10, 2) DEFAULT 1000.00,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('Created wallets table');
+
+    // Create game_stats table
+    await client.query(`
+      CREATE TABLE game_stats (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        game_type VARCHAR(50) NOT NULL,
+        total_games INTEGER DEFAULT 0,
+        games_won INTEGER DEFAULT 0,
+        games_lost INTEGER DEFAULT 0,
+        total_wagered DECIMAL(10, 2) DEFAULT 0,
+        total_winnings DECIMAL(10, 2) DEFAULT 0,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+        UNIQUE(user_id, game_type)
+      )
+    `);
+    console.log('Created game_stats table');
+
+    // Create transactions table
+    await client.query(`
+      CREATE TABLE transactions (
+        id SERIAL PRIMARY KEY,
+        user_id INTEGER NOT NULL,
+        amount DECIMAL(10, 2) NOT NULL,
+        type VARCHAR(50) NOT NULL,
+        game_type VARCHAR(50),
+        description TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      )
+    `);
+    console.log('Created transactions table');
+
+    // Create indexes for better query performance
+    await client.query('CREATE INDEX idx_wallets_user_id ON wallets(user_id)');
+    await client.query('CREATE INDEX idx_game_stats_user_id ON game_stats(user_id)');
+    await client.query('CREATE INDEX idx_transactions_user_id ON transactions(user_id)');
+    await client.query('CREATE INDEX idx_transactions_created_at ON transactions(created_at)');
+    console.log('Created indexes');
+
+    console.log('Database initialized successfully');
+  } catch (error) {
+    console.error('Error initializing database:', error.message);
+    throw error;
+  } finally {
+    client.release();
+    await pool.end();
+    process.exit(0);
   }
-});
+}
 
-// Create tables
-db.serialize(() => {
-  // Enable foreign keys
-  db.run('PRAGMA foreign_keys = ON');
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS users (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      username TEXT UNIQUE NOT NULL,
-      password TEXT NOT NULL,
-      email TEXT UNIQUE,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    );
-
-    CREATE TABLE IF NOT EXISTS wallets (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER UNIQUE NOT NULL,
-      balance REAL DEFAULT 1000.0,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS game_stats (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      game_type TEXT NOT NULL,
-      total_games INTEGER DEFAULT 0,
-      games_won INTEGER DEFAULT 0,
-      games_lost INTEGER DEFAULT 0,
-      total_wagered REAL DEFAULT 0,
-      total_winnings REAL DEFAULT 0,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
-      UNIQUE(user_id, game_type)
-    );
-
-    CREATE TABLE IF NOT EXISTS transactions (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
-      user_id INTEGER NOT NULL,
-      amount REAL NOT NULL,
-      type TEXT NOT NULL,
-      game_type TEXT,
-      description TEXT,
-      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-      FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-    );
-  `, (err) => {
-    if (err) {
-      console.error('Error creating tables:', err.message);
-      process.exit(1);
-    } else {
-      console.log('Database initialized successfully');
-      db.close((err) => {
-        if (err) {
-          console.error('Error closing database:', err.message);
-        }
-        process.exit(0);
-      });
-    }
-  });
-});
+initializeDatabase();
