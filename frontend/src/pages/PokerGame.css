@@ -39,3 +39,59 @@
   color: #ffd700;
   margin-bottom: 10px;
 }
+
+/* Mobile responsiveness for poker */
+@media (max-width: 768px) {
+  .poker-table {
+    gap: 15px;
+  }
+
+  .pot-display {
+    padding: 12px;
+  }
+
+  .community-cards .card-container {
+    padding: 12px;
+  }
+
+  .players-list {
+    gap: 15px;
+    margin-top: 15px;
+    flex-wrap: wrap;
+  }
+
+  .player-info {
+    padding: 12px;
+    min-width: 130px;
+    flex: 1;
+  }
+}
+
+@media (max-width: 480px) {
+  .poker-table {
+    gap: 10px;
+  }
+
+  .pot-display {
+    padding: 10px;
+  }
+
+  .community-cards .card-container {
+    padding: 10px;
+  }
+
+  .players-list {
+    gap: 10px;
+    margin-top: 10px;
+  }
+
+  .player-info {
+    padding: 10px;
+    min-width: 100px;
+  }
+
+  .player-info h4 {
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+  }
+}

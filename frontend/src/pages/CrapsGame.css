@@ -20,6 +20,40 @@
   gap: 15px;
 }
 
+/* Mobile responsiveness for craps */
+@media (max-width: 768px) {
+  .craps-table-container {
+    padding: 15px;
+    margin: 15px auto;
+    border-width: 5px;
+    border-radius: 20px;
+  }
+
+  .table-felt {
+    padding: 10px;
+  }
+
+  .craps-layout {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .craps-table-container {
+    padding: 10px;
+    margin: 10px auto;
+  }
+
+  .table-felt {
+    padding: 8px;
+  }
+
+  .craps-layout {
+    gap: 8px;
+  }
+}
+
 /* Side Sections */
 .left-section, .right-section {
   display: flex;
@@ -42,6 +76,23 @@
   grid-template-columns: 1fr 3fr 1fr;
   gap: 10px;
   margin-top: 10px;
+}
+
+/* Mobile responsiveness for pass line */
+@media (max-width: 768px) {
+  .pass-line-container {
+    grid-template-columns: 1fr 2fr 1fr;
+    gap: 8px;
+    margin-top: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .pass-line-container {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    margin-top: 6px;
+  }
 }
 
 .pass-line-corner, .pass-line-main {
@@ -118,6 +169,21 @@
   gap: 5px;
 }
 
+/* Mobile responsiveness for field numbers */
+@media (max-width: 768px) {
+  .field-numbers {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .field-numbers {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
+}
+
 .field-number {
   background: rgba(255, 255, 255, 0.15);
   border: 2px solid rgba(255, 215, 0, 0.5);
@@ -174,6 +240,21 @@
   gap: 8px;
 }
 
+/* Mobile responsiveness for place numbers */
+@media (max-width: 768px) {
+  .place-numbers {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .place-numbers {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+}
+
 .place-bet-box {
   background: rgba(100, 149, 237, 0.2);
   border: 2px solid #6495ed;
@@ -223,6 +304,21 @@
   grid-template-columns: repeat(6, 1fr);
   gap: 8px;
   overflow: visible;
+}
+
+/* Mobile responsiveness for horizontal place numbers */
+@media (max-width: 768px) {
+  .place-numbers-horizontal {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+}
+
+@media (max-width: 480px) {
+  .place-numbers-horizontal {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 5px;
+  }
 }
 
 .place-bet-box-horiz {
@@ -279,6 +375,21 @@
   gap: 5px;
 }
 
+/* Mobile responsiveness for horizontal field numbers */
+@media (max-width: 768px) {
+  .field-numbers-horizontal {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 4px;
+  }
+}
+
+@media (max-width: 480px) {
+  .field-numbers-horizontal {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 3px;
+  }
+}
+
 /* Proposition Bets Center */
 .prop-section {
   background: rgba(0, 0, 0, 0.2);
@@ -300,6 +411,14 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+/* Mobile responsiveness for prop bets */
+@media (max-width: 480px) {
+  .prop-bets-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
 }
 
 .prop-bet-box {
@@ -357,6 +476,14 @@
   display: grid;
   grid-template-columns: repeat(2, 1fr);
   gap: 8px;
+}
+
+/* Mobile responsiveness for hardways */
+@media (max-width: 480px) {
+  .hardways-grid {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
 }
 
 .hardway-box {
@@ -464,6 +591,24 @@
   border: 2px solid rgba(255, 215, 0, 0.3);
 }
 
+/* Mobile responsiveness for game info */
+@media (max-width: 768px) {
+  .game-info-craps {
+    padding: 15px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+    gap: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .game-info-craps {
+    padding: 12px;
+    margin-bottom: 10px;
+    gap: 10px;
+  }
+}
+
 .info-item {
   text-align: center;
 }
@@ -529,6 +674,7 @@
   display: flex;
   gap: 12px;
   align-items: center;
+  flex-wrap: wrap;
 }
 
 .chip-selector label {
@@ -553,6 +699,44 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
   position: relative;
   transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+/* Mobile responsiveness for chip selector */
+@media (max-width: 768px) {
+  .chip-selector {
+    gap: 10px;
+  }
+
+  .chip-selector label {
+    font-size: 0.9rem;
+  }
+
+  .chip-option {
+    width: 55px;
+    height: 55px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chip-selector {
+    gap: 8px;
+    justify-content: center;
+  }
+
+  .chip-selector label {
+    font-size: 0.8rem;
+    width: 100%;
+    text-align: center;
+    margin-bottom: 8px;
+  }
+
+  .chip-option {
+    width: 45px;
+    height: 45px;
+    font-size: 0.9rem;
+  }
 }
 
 .chip-option:hover {

@@ -54,3 +54,57 @@
   background: rgba(255, 255, 255, 0.2);
   border-color: #ffd700;
 }
+
+/* Mobile responsiveness for roulette */
+@media (max-width: 768px) {
+  .roulette-wheel {
+    width: 250px;
+    height: 250px;
+    margin: 20px auto;
+    border-width: 8px;
+  }
+
+  .roulette-result {
+    width: 80px;
+    height: 80px;
+    font-size: 1.5rem;
+  }
+
+  .betting-board {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin: 15px 0;
+    padding: 12px;
+  }
+
+  .bet-option {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .roulette-wheel {
+    width: 200px;
+    height: 200px;
+    margin: 15px auto;
+    border-width: 6px;
+  }
+
+  .roulette-result {
+    width: 60px;
+    height: 60px;
+    font-size: 1.2rem;
+  }
+
+  .betting-board {
+    grid-template-columns: 1fr;
+    gap: 6px;
+    padding: 10px;
+  }
+
+  .bet-option {
+    padding: 10px;
+    font-size: 0.8rem;
+  }
+}

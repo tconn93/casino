@@ -46,3 +46,46 @@
   font-weight: bold;
   border: 2px solid #fff;
 }
+
+/* Mobile responsiveness for baccarat */
+@media (max-width: 768px) {
+  .baccarat-bet-areas {
+    margin: 15px 0;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .bet-area {
+    padding: 15px;
+    margin: 0;
+    min-width: 120px;
+    font-size: 1.1em;
+  }
+
+  .bet-area .bet-chip {
+    width: 50px;
+    height: 50px;
+    font-size: 1.2em;
+    margin: 8px auto 0;
+  }
+}
+
+@media (max-width: 480px) {
+  .baccarat-bet-areas {
+    margin: 10px 0;
+    gap: 8px;
+  }
+
+  .bet-area {
+    padding: 12px;
+    min-width: 100px;
+    font-size: 1em;
+  }
+
+  .bet-area .bet-chip {
+    width: 40px;
+    height: 40px;
+    font-size: 1em;
+    margin: 6px auto 0;
+  }
+}
